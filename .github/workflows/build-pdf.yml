@@ -3,9 +3,12 @@ name: Build PDF
 on:
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -25,3 +28,12 @@ jobs:
           name: main-pdf
           path: main.pdf
           if-no-files-found: error
+
+      - name: Create release with PDF
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: snapshot-${{ github.sha }}
+          name: Snapshot ${{ github.run_number }}
+          files: main.pdf
+          generate_release_notes: true
