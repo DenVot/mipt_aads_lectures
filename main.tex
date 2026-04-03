@@ -1,0 +1,127 @@
+\documentclass[11pt,a5paper,openany]{book}
+
+\input{presets}
+\usepackage[a5paper,left=1cm,right=1cm,top=1.4cm,bottom=1cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+
+\def\BookTitle{AaDS}
+\def\Lecturer{Денис Аксёненко}
+\def\Scribe{Денис Войтенко}
+
+\titleformat{\chapter}[display]
+{\normalfont\bfseries\Huge}
+{Лекция\ \thechapter}{20pt}{\Huge}
+\renewcommand{\chaptername}{Лекция}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\chaptermark}[1]{\markboth{Лекция \thechapter.\ #1}{}}
+\setlength{\headheight}{14pt}
+\setlength{\headsep}{6pt}
+\raggedbottom
+
+% TOC styling: semester -> lecture -> section -> subsection -> subsubsection.
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+\setlength{\cftbeforepartskip}{0.8em}
+\renewcommand{\cftpartfont}{\bfseries}
+\renewcommand{\cftpartpagefont}{\bfseries}
+\setlength{\cftpartindent}{0pt}
+\setlength{\cftpartnumwidth}{4.2em}
+
+\setlength{\cftchapindent}{1.8em}
+\setlength{\cftchapnumwidth}{5.8em}
+\renewcommand{\cftchappresnum}{Лекция\ }
+\renewcommand{\cftchapaftersnum}{.\ }
+
+% Nested TOC levels: indents set where titles *start*; numwidth only as wide as the
+% longest number at that level (otherwise \numberline leaves empty space before titles).
+\setlength{\cftsecindent}{5.3em}
+\setlength{\cftsecnumwidth}{2.5em}
+\setlength{\cftsubsecindent}{7.0em}
+\setlength{\cftsubsecnumwidth}{3.2em}
+\setlength{\cftsubsubsecindent}{8.3em}
+\setlength{\cftsubsubsecnumwidth}{4.0em}
+\renewcommand{\cftsubsubsecfont}{\small}
+
+\newcommand{\Semester}[1]{%
+    \clearpage%
+    \phantomsection%
+    \setcounter{part}{#1}%
+    \addcontentsline{toc}{part}{\Roman{part} семестр}%
+    \markboth{}{}%
+    \thispagestyle{empty}%
+    \vspace*{\fill}%
+    \begin{center}
+        {\Huge\bfseries \Roman{part} семестр}
+    \end{center}
+    \vspace*{\fill}%
+    \clearpage%
+    \setcounter{chapter}{0}%
+}
+
+\newcommand{\Lecture}[3]{%
+    \setcounter{chapter}{\numexpr#1-1\relax}%
+    \chapter{#2}%
+    \input{#3}%
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \newgeometry{margin=0cm}
+    \thispagestyle{empty}
+    \begin{tikzpicture}[remember picture,overlay]
+        \path[use as bounding box] (current page.south west) rectangle (current page.north east);
+
+        \fill[cyan!4] (current page.south west) rectangle (current page.north east);
+
+        \fill[blue!18]
+            ([xshift=-0.6cm,yshift=-2.0cm]current page.north west) --
+            ([xshift=0.6cm,yshift=-3.1cm]current page.north east) --
+            ([xshift=0.6cm,yshift=-4.1cm]current page.north east) --
+            ([xshift=-0.6cm,yshift=-3.0cm]current page.north west) -- cycle;
+        \fill[violet!16]
+            ([xshift=-0.6cm,yshift=3.1cm]current page.south west) --
+            ([xshift=0.6cm,yshift=4.2cm]current page.south east) --
+            ([xshift=0.6cm,yshift=5.2cm]current page.south east) --
+            ([xshift=-0.6cm,yshift=4.1cm]current page.south west) -- cycle;
+
+        \begin{scope}[shift={(current page.center)}]
+            \draw[thick, gray!65] (-3.5,1.0) -- (-2.0,2.2) -- (-0.5,1.1) -- (1.0,2.3) -- (2.8,1.2);
+            \draw[thick, gray!65] (-3.1,-1.0) -- (-1.5,0.1) -- (0.0,-0.9) -- (1.4,0.1) -- (2.9,-0.9);
+            \draw[thick, gray!65] (-2.0,2.2) -- (-1.5,0.1);
+            \draw[thick, gray!65] (-0.5,1.1) -- (0.0,-0.9);
+            \draw[thick, gray!65] (1.0,2.3) -- (1.4,0.1);
+            \foreach \x/\y in {-3.5/1.0,-2.0/2.2,-0.5/1.1,1.0/2.3,2.8/1.2,-3.1/-1.0,-1.5/0.1,0.0/-0.9,1.4/0.1,2.9/-0.9} {
+                \filldraw[fill=white, draw=black!60, line width=0.6pt] (\x,\y) circle (0.10);
+            }
+
+            \fill[white, opacity=0.9, rounded corners=7pt] (-3.8,-2.6) rectangle (3.8,2.9);
+            \draw[black, rounded corners=7pt, line width=0.8pt] (-3.8,-2.6) rectangle (3.8,2.9);
+            \node[align=center] at (0,0.95) {\fontsize{42}{46}\selectfont\bfseries \BookTitle};
+            \node[align=center] at (0,-1.2) {\Large МФТИ ВШПИ};
+
+            \fill[white, opacity=0.9, rounded corners=6pt] (-3.8,-5.2) rectangle (3.8,-3.1);
+            \draw[black, rounded corners=6pt, line width=0.7pt] (-3.8,-5.2) rectangle (3.8,-3.1);
+            \node[anchor=west, align=left] at (-3.35,-3.8) {\large Лектор:\ \Lecturer};
+            \node[anchor=west, align=left] at (-3.35,-4.65) {\large Конспект:\ \Scribe};
+        \end{scope}
+    \end{tikzpicture}
+    \restoregeometry
+\end{titlepage}
+
+\clearpage
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\input{intro}
+\input{lectures_manifest}
+
+\end{document}

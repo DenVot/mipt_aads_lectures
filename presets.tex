@@ -1,0 +1,136 @@
+\usepackage[utf8]{inputenc}
+\usepackage[T2A,T1]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath,amsthm,textcomp,amssymb,graphicx,enumerate}
+\usepackage{microtype}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{hyperref}
+\usepackage{cancel}
+\usepackage{stmaryrd}
+\usepackage{soul}
+\usepackage{ulem}
+\usepackage{forest}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{trees, decorations.pathreplacing,decorations.pathmorphing, calligraphy, backgrounds, calc, arrows.meta}
+\usetikzlibrary{positioning}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=blue
+}
+
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0pt}
+\emergencystretch=2em
+
+\DeclareRobustCommand{\optstar}{
+    \texorpdfstring{
+        \unskip\nobreak\kern0.06em
+        \raisebox{0.12ex}{\textbf{*}}
+    }{*}}
+\newenvironment{optionalblock}{
+    \par\smallskip
+    \begin{list}{}{
+        \setlength{\leftmargin}{1.15em}
+        \setlength{\itemindent}{0pt}
+        \setlength{\labelwidth}{0.85em}
+        \setlength{\labelsep}{0.25em}
+        \setlength{\topsep}{0pt}
+        \setlength{\parsep}{0.5em}
+        \setlength{\partopsep}{0pt}
+    }
+    \item[\raisebox{0.15ex}{\textbf{*}}]
+    \ignorespaces
+}{
+    \end{list}
+    \smallskip
+}
+
+\newcounter{definition}[section]
+\renewcommand{\thedefinition}{\thesection.\arabic{definition}}
+\NewDocumentCommand{\Def}{o}{
+    \par\refstepcounter{definition}
+    \noindent\textbf{Определение~\thedefinition.}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\newcommand{\DefRef}[1]{\hyperref[#1]{определение~\ref*{#1}}}
+\newcounter{statement}[section]
+\renewcommand{\thestatement}{\thesection.\arabic{statement}}
+\NewDocumentCommand{\Th}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Теорема\IfValueT{#2}{ (#2)}~\thestatement.}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\NewDocumentCommand{\ThBd}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Теорема\IfValueT{#2}{ (#2)}~\thestatement\ (б/д).}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\NewDocumentCommand{\Lm}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Лемма\IfValueT{#2}{ (#2)}~\thestatement.}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\NewDocumentCommand{\LmBd}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Лемма\IfValueT{#2}{ (#2)}~\thestatement\ (б/д).}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\NewDocumentCommand{\St}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Утверждение\IfValueT{#2}{ (#2)}~\thestatement.}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\NewDocumentCommand{\StBd}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Утверждение\IfValueT{#2}{ (#2)}~\thestatement\ (б/д).}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\NewDocumentCommand{\Cons}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Следствие\IfValueT{#2}{ (#2)}~\thestatement.}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+
+\NewDocumentCommand{\ConsBd}{o g}{
+    \par\refstepcounter{statement}
+    \noindent\textbf{Следствие\IfValueT{#2}{ (#2)}~\thestatement\ (б/д).}
+    \IfValueT{#1}{\label{#1}}
+    \space
+}
+\newcommand{\ThRef}[1]{\hyperref[#1]{теорема~\ref*{#1}}}
+\newcommand{\LmRef}[1]{\hyperref[#1]{лемма~\ref*{#1}}}
+\newcommand{\StRef}[1]{\hyperref[#1]{утверждение~\ref*{#1}}}
+\newcommand{\ConsRef}[1]{\hyperref[#1]{следствие~\ref*{#1}}}
+\def\Task{\textbf{Задача.} }
+\def\Exe{\textbf{Упражнение.} }
+\def\Note{\textbf{Примечание.} }
+\def\FunFact{\textbf{Фанфакт. }}
+
+\renewcommand{\proofname}{Доказательство}
+\renewenvironment{proof}[1][\proofname]
+{\par\noindent\textit{#1. }\ignorespaces}
+{\hfill\qedsymbol\par\smallskip}
+
+\DeclareMathOperator*{\argmin}{argmin}
+
+\def\O{\mathcal{O}}
+\def\R{\mathbb{R}}
+\def\N{\mathbb{N}}
+\def\Z{\mathbb{Z}}
+\def\C{\mathbb{C}}
+\def\Primary{\mathbb{P}}
+
+\newenvironment{sol}{\begin{proof}[Решение]}{\end{proof}}
