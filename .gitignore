@@ -1,5 +1,6 @@
 # macOS
 .DS_Store
+**/main.pdf
 
 # LaTeX / latexmk
 *.acn
