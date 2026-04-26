@@ -31,7 +31,7 @@
     \item $\forall v \in V \hookrightarrow \sum\limits_{u \in V} f(u, v) = 0$
 \end{enumerate}
 
-\Exe Покажите, что $(u, v) \not \in E \Rightarrow f(u, v) = f(v, u) = 0$.
+\Exe Покажите, что $(u, v) \not \in E, (v, u) \not \in E \Rightarrow f(u, v) = f(v, u) = 0$.
 
 \Def Величиной потока положим, по определению, следующее соотношение:
 \begin{equation*}
@@ -98,7 +98,7 @@
     \end{equation*}
 \end{proof}
 
-\St $\forall X, Y \subset V \hookrightarrow f(X, Y) = -f(X, Y)$
+\St $\forall X, Y \subset V \hookrightarrow f(X, Y) = -f(Y, X)$
 \begin{proof}
     \begin{equation*}
         f(X, Y) = \sum\limits_{u \in X} \sum\limits_{v \in Y} f(u, v) = - \sum\limits_{u \in X} \sum\limits_{v \in Y} f(v, u) = -f(Y, X)
