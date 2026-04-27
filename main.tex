@@ -5,6 +5,10 @@
     \clearpage
     \@mainmatterfalse
     \pagenumbering{roman}}%
+\renewcommand\mainmatter{%
+    \clearpage
+    \@mainmattertrue
+    \pagenumbering{arabic}}%
 \makeatother
 
 \input{presets}
@@ -61,7 +65,6 @@
 }
 
 \setcounter{tocdepth}{1}
-\contentsmargin{0.75em}
 \makeatletter
 
 \renewcommand*\l@part[2]{%
@@ -80,19 +83,45 @@
     \fi}
 \makeatother
 \titlecontents{chapter}[0pc]
-    {\addvspace{0.55em plus 1pt}\bfseries}%
+    {\addvspace{0.55em}\bfseries}%
     {\color{violet!75!black}Лекция~\thecontentslabel.\quad}%
     {}%
     {\titlerule*[0.42em]{\textcolor{black!28}{.}}\quad\contentspage}%
-    [\smallskip]
+    [\kern0.18em]
 \titlecontents{section}[1.15pc]
-    {\addvspace{0.12em}\normalfont\small}%
+    {\addvspace{0.1em}\normalfont\small}%
     {\thecontentslabel\quad}%
     {}%
     {\titlerule*[0.42em]{\textcolor{black!28}{.}}\quad\contentspage}%
     []
 
+\makeatletter
+\renewcommand\@pnumwidth{1.7em}
+\makeatother
+
 \renewcommand{\contentsname}{Оглавление}
+
+\makeatletter
+% Вместо \chapter*{\contentsname} (огромный \Huge) — компактный заголовок
+\renewcommand\tableofcontents{%
+    \if@twocolumn
+        \@restonecoltrue\onecolumn
+    \else
+        \@restonecolfalse
+    \fi
+    \begingroup
+        \parindent \z@
+        \null\vskip 0.35\baselineskip
+        \@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}%
+        \phantomsection
+        \centering
+        {\large\bfseries\contentsname\par}%
+        \vskip 0.65\baselineskip
+    \endgroup
+    \@starttoc{toc}%
+    \if@restonecol\twocolumn\fi
+}%
+\makeatother
 
 \begin{document}
 \hypersetup{pageanchor=false}
