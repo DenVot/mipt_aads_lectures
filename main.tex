@@ -1,10 +1,20 @@
 \documentclass[11pt,a5paper,openany]{book}
 
+\makeatletter
+\renewcommand\frontmatter{%
+    \clearpage
+    \@mainmatterfalse
+    \pagenumbering{roman}}%
+\renewcommand\mainmatter{%
+    \clearpage
+    \@mainmattertrue
+    \pagenumbering{arabic}}%
+\makeatother
+
 \input{presets}
-\usepackage[a5paper,left=1cm,right=1cm,top=1.4cm,bottom=1cm]{geometry}
+\usepackage[a5paper,left=1cm,right=1cm,top=1.65cm,bottom=1cm]{geometry}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
-\usepackage{tocloft}
 
 \def\BookTitle{AaDS}
 \def\Lecturer{Денис Аксёненко}
@@ -20,46 +30,29 @@
 \fancyhead[L]{\leftmark}
 \fancyhead[R]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{%
+    \fancyhf{}%
+    \fancyhead[L]{\leftmark}%
+    \fancyhead[R]{\thepage}%
+    \renewcommand{\headrulewidth}{0.4pt}%
+}
 \renewcommand{\chaptermark}[1]{\markboth{Лекция \thechapter.\ #1}{}}
-\setlength{\headheight}{14pt}
-\setlength{\headsep}{6pt}
+\setlength{\headheight}{15pt}
+\setlength{\headsep}{9pt}
 \raggedbottom
-
-% TOC styling: semester -> lecture -> section -> subsection -> subsubsection.
-\setcounter{tocdepth}{3}
 \setcounter{secnumdepth}{3}
-\setlength{\cftbeforepartskip}{0.8em}
-\renewcommand{\cftpartfont}{\bfseries}
-\renewcommand{\cftpartpagefont}{\bfseries}
-\setlength{\cftpartindent}{0pt}
-\setlength{\cftpartnumwidth}{4.2em}
-
-\setlength{\cftchapindent}{1.8em}
-\setlength{\cftchapnumwidth}{5.8em}
-\renewcommand{\cftchappresnum}{Лекция\ }
-\renewcommand{\cftchapaftersnum}{.\ }
-
-% Nested TOC levels: indents set where titles *start*; numwidth only as wide as the
-% longest number at that level (otherwise \numberline leaves empty space before titles).
-\setlength{\cftsecindent}{5.3em}
-\setlength{\cftsecnumwidth}{2.5em}
-\setlength{\cftsubsecindent}{7.0em}
-\setlength{\cftsubsecnumwidth}{3.2em}
-\setlength{\cftsubsubsecindent}{8.3em}
-\setlength{\cftsubsubsecnumwidth}{4.0em}
-\renewcommand{\cftsubsubsecfont}{\small}
 
 \newcommand{\Semester}[1]{%
     \clearpage%
-    \phantomsection%
     \setcounter{part}{#1}%
-    \addcontentsline{toc}{part}{\Roman{part} семестр}%
     \markboth{}{}%
     \thispagestyle{empty}%
     \vspace*{\fill}%
     \begin{center}
         {\Huge\bfseries \Roman{part} семестр}
-    \end{center}
+    \end{center}%
+    \phantomsection%
+    \addcontentsline{toc}{part}{\Roman{part}~семестр}%
     \vspace*{\fill}%
     \clearpage%
     \setcounter{chapter}{0}%
@@ -71,7 +64,67 @@
     \input{#3}%
 }
 
+\setcounter{tocdepth}{1}
+\makeatletter
+
+\renewcommand*\l@part[2]{%
+    \ifnum \c@tocdepth >-2\relax
+        \addpenalty{-\@highpenalty}%
+        \addvspace{1.05em \@plus 3\p@}%
+        \setlength\@tempdima{3em}%
+        \begingroup
+            \parindent \z@
+            \leavevmode
+            {\large\bfseries\color{blue!55!black}#1}\par
+            \nobreak
+            \global\@nobreaktrue
+            \everypar{\global\@nobreakfalse\everypar{}}%
+        \endgroup
+    \fi}
+\makeatother
+\titlecontents{chapter}[0pc]
+    {\addvspace{0.55em}\bfseries}%
+    {\color{violet!75!black}Лекция~\thecontentslabel.\quad}%
+    {}%
+    {\titlerule*[0.42em]{\textcolor{black!28}{.}}\quad\contentspage}%
+    [\kern0.18em]
+\titlecontents{section}[1.15pc]
+    {\addvspace{0.1em}\normalfont\small}%
+    {\thecontentslabel\quad}%
+    {}%
+    {\titlerule*[0.42em]{\textcolor{black!28}{.}}\quad\contentspage}%
+    []
+
+\makeatletter
+\renewcommand\@pnumwidth{1.7em}
+\makeatother
+
+\renewcommand{\contentsname}{Оглавление}
+
+\makeatletter
+% Вместо \chapter*{\contentsname} (огромный \Huge) — компактный заголовок
+\renewcommand\tableofcontents{%
+    \if@twocolumn
+        \@restonecoltrue\onecolumn
+    \else
+        \@restonecolfalse
+    \fi
+    \begingroup
+        \parindent \z@
+        \null\vskip 0.35\baselineskip
+        \@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}%
+        \phantomsection
+        \centering
+        {\large\bfseries\contentsname\par}%
+        \vskip 0.65\baselineskip
+    \endgroup
+    \@starttoc{toc}%
+    \if@restonecol\twocolumn\fi
+}%
+\makeatother
+
 \begin{document}
+\hypersetup{pageanchor=false}
 
 \begin{titlepage}
     \newgeometry{margin=0cm}
@@ -117,10 +170,13 @@
 \end{titlepage}
 
 \clearpage
-\pagenumbering{roman}
+\frontmatter
+\pagestyle{fancy}
 \tableofcontents
 \clearpage
-\pagenumbering{arabic}
+\mainmatter
+\hypersetup{pageanchor=true}%
+\pagestyle{fancy}
 % \input{intro}
 \input{lectures_manifest}
 
