@@ -645,12 +645,41 @@ $E_L$ получается же только лишь рёбрами, котор
 
     Покажем, что $c^+$ и $c^-$ не изменились в остаточной сети. Покажем для $c^+$, т.к. для $c^-$ аналогично.
 
-    Рассмотрим вершину $v \in V - s, t$.
+    Воспользуемся следствием теоремы о декомпозиции потока для $f$.
+    Существуют <<единичные>> простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m:$
+    \begin{equation*}
+        f(u, v) = \sum\limits_{k = 1}^n \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \chi_{C_k}(u, v)
+    \end{equation*}
 
-    \begin{multline*}
-        c_f^+(v) = \sum\limits_{(u, v) \in E} c_f(u, v) = \sum\limits_{(u, v) \in E} c(u, v) - f(u, v) = \\ 
-            = \sum\limits_{(u, v) \in E} c(u, v) - \sum\limits_{(u, v) \in E} f(u, v) = 
-    \end{multline*}
+    Рассмотрим вершину $v \in V - s, t$ и рассмотрим все пути и циклы, полученные выше, которые проходят через неё.
+    Рассмотрим $P_k$ или $C_k$ проходящий через $v$. Они обязаны пускать поток (или в случае цикла циркуляцию) следующим образом:
+
+    \begin{figure}[H]
+        \center
+        \begin{tikzpicture}[
+            node/.style={circle, draw, thick, minimum size=8mm, font=\large},
+            edge label/.style={font=\small, inner sep=2pt}
+            ]
+                \node[node] (u) at (0,0) {$u$};
+                \node[node, blue] (v) at (3,0) {$v$};
+                \node[node] (w) at (6,0) {$w$};
+
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=4pt] u.east) -- ([yshift=4pt] v.west)
+                    node[midway, above, edge label] {$+1$};
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=-4pt] v.west) -- ([yshift=-4pt] u.east)
+                    node[midway, below, edge label] {$-1$};
+
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=4pt] v.east) -- ([yshift=4pt] w.west)
+                    node[midway, above, edge label] {$+1$};
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=-4pt] w.west) -- ([yshift=-4pt] v.east)
+                    node[midway, below, edge label] {$-1$};
+            \end{tikzpicture}    
+    \end{figure}
+    То есть поток (циркуляция) еще обратные ребра создает. Получается, что после пропускания пути (цикла) через $v$ в неё \textit{входят} ребра, которые увеличивают входную емкость на $+1$ и $-1$. В сумме получаем $+1 - 1 = 0$, то есть <<единичный>> путь (цикл) проходящий через $v$ не меняет входную емкость. Значит, любая сумма их тоже не меняет $\Rightarrow$ и сам поток тоже ничего не меняет.
 
 \end{proof}
 
@@ -658,7 +687,44 @@ $E_L$ получается же только лишь рёбрами, котор
 \begin{proof}
     
     Запустим схему Диница на $\sqrt {\P(\Ne)}$. Если больше запускать ее не надо, то это тривиальный случай. Допустим, еще можно запустить итерации. 
-    В силу того, что после каждой итерации схемы расстояние от истока до стока уменьшается строго на 1, то в сверху количество итераций оценивается как $\delta_\Ne (s, t)$.
+    
+    Пусть после $\sqrt {\P(\Ne)}$ итераций мы получили поток $f$. По лемме выше, $\P(\Ne) = \P(\Ne_f)$. Пусть $f'$ -- максимальный поток в $\Ne_f$.
+    
+    В силу того, что после каждой итерации схемы расстояние от истока до стока увеличивается хотя бы на 1, то $\delta_{\Ne_f}(s, t) \geq \sqrt {\P(\Ne)}$.
+
+    Далее, применим вышедоказанную лемму к сети $\Ne_f$ (вспомним, что в ней максимальный поток $f'$):
+    \begin{equation*}
+        \delta_{\Ne_f}(s, t) \leq \frac{\P\left(\Ne_f\right)}{|f'|} + 1
+    \end{equation*}
+    Далее, вспомним, что $\P(\Ne) = \P\left( \Ne_f \right)$:
+    \begin{equation*}
+        \delta_{\Ne_f}(s, t) \leq \frac{\P\left(\Ne\right)}{|f'|} + 1
+    \end{equation*}
+    С другой стороны мы оценили $\delta_{\Ne_f}(s, t)$ снизу, а значит:
+    \begin{equation*}
+        \sqrt {\P(\Ne)} \leq \delta_{\Ne_f}(s, t) \leq \frac{\P\left(\Ne\right)}{|f'|} + 1
+    \end{equation*}
+    \begin{equation*}
+        \sqrt {\P(\Ne)} \leq \frac{\P\left(\Ne\right)}{|f'|} + 1
+    \end{equation*}
+    Теперь выразим оценку на $|f'|$:
+    \begin{equation*}
+        \frac{\P\left(\Ne\right)}{|f'|} + 1 \geq \sqrt {\P(\Ne)}
+    \end{equation*}
+    \begin{equation*}
+        \frac{\P\left(\Ne\right)}{|f'|} \geq \sqrt {\P(\Ne)} - 1
+    \end{equation*}
+    \begin{equation*}
+        \frac{|f'|}{\P\left(\Ne\right)} \leq \frac{1}{\sqrt {\P(\Ne)} - 1}
+    \end{equation*}
+    \begin{equation*}
+        |f'| \leq \frac{\P\left(\Ne\right)}{\sqrt {\P(\Ne)} - 1} = \O\left(\sqrt {\P(\Ne)}\right)
+    \end{equation*}
+    \begin{equation*}
+        |f'| = \O\left(\sqrt {\P(\Ne)}\right)
+    \end{equation*}
+    Далее, в силу того, что поток в сети $\Ne_f$ с каждой итерацией увеличивается хотя бы на 1, то в худшем случае нужно будет сделать еще $|f'| = \O\left(\sqrt {\P(\Ne)}\right)$ итераций.
+    Значит суммарно мы сделаем $\sqrt {\P(\Ne)} + \O\left(\sqrt {\P(\Ne)}\right) = \O\left(\sqrt {\P(\Ne)}\right)$ итераций.
 
 \end{proof}
 
