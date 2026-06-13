@@ -333,7 +333,7 @@
 \begin{equation*}
     \delta(u, v) = \min\limits_{p \in V} [\delta(u, p) + \delta(p, v)]
 \end{equation*}
-Будем делать переход $dp[k][u][v] = \min(dp[k - 1][u][v_k] + \delta[k - 1][v_k][v], dp[k][u][v])$, по сути пытаясь выбрать оптимальную <<среднюю вершину>>.
+Будем делать переход $dp[k][u][v] = \min(dp[k - 1][u][v_k] + \delta[k - 1][v_k][v], dp[k - 1][u][v])$, по сути пытаясь выбрать оптимальную <<среднюю вершину>>.
 
 \begin{algorithm}[H]
 \caption{Алгоритм Флойда-Уоршелла}
