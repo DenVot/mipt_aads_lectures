@@ -400,3 +400,266 @@ $E_L$ получается же только лишь рёбрами, котор
 \end{proof}
 
 То есть мы получили асимптотически более быстрый алгоритм поиска максимального потока, чем алгоритм Эдмондса-Карпа, который работает за $\O\left( |V||E|^2 \right)$.
+
+\section{Декомпозиция потока}
+
+Следующая теорема показывает относительно интуитивные мысли о том, что поток <<распадается>> на пути и циклы.
+
+\Def Пусть дано множество ребер $E$. Тогда
+\begin{equation*}
+    \chi_E (u, v) \eqd \begin{cases}
+        1, (u, v) \in E \\
+        -1, (v, u) \in E \\
+        0, else
+    \end{cases}
+\end{equation*}
+
+\Th{О декомпозиции} Пусть $\Ne$ -- сеть и $f$ -- поток в этой сети. Тогда найдутся простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m$.
+А также $\exists \alpha_1, \dots \alpha_n \in \N$ и $\beta_1, \dots, \beta_m \in \N$ такие, что:
+\begin{equation*}
+    f(u, v) = \sum\limits_{k = 1}^n \alpha_k \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \beta_k \chi_{C_k}(u, v)
+\end{equation*}
+То есть $f(u, v)$ есть <<сумма потоков>> путей, куда входит ребро $(u, v)$, а также быть может сумма <<потоков>> каких-то циклов.
+Вообще говоря, <<поток>> в цикле называется циркуляцией (но этого знать необязательно) и это объект немного другой природы, который не рассматривается в нашем курсе.
+\begin{proof}
+    
+Пусть из $s$ выходит хотя бы одно ребро $(s, v)$ с положительным потоком. Если такового нет, то $f \equiv 0$ и теорема тривиальна. Иначе перейдем по этому ребру в вершину $v$. 
+Если $v = t$, то нашли путь $P$ из $s$ в $t$. Иначе, по закону сохранения, потока найдется ребро $(v, u)$ с положительным потоком. Если $u = t$, то нашли опять простой путь из $s$ в $t$. Иначе применим тот же алгоритм действий, что и для вершины $v$. И будем его применять, пока не достигнем, либо $t$, либо вершину, которую мы посетили на предыдущих шагах.
+
+Рассмотрим случаи:
+\begin{enumerate}
+    \item Получили простой путь $P$ из $s$ в $t$. Положим $\alpha \eqd \min\limits_{e \in P} f(e)$. Очевидно, $\alpha > 0$. Более того, коль скоро емкости целочисленны $\Rightarrow \alpha \geq 1$. Уменьшим $f$ на $\alpha$. То есть новый рассматриваемый поток (и это действительно поток) на ребре $(u, v)$ будет равен $f(u, v) - \alpha, (u, v) \in P$ или $f(u, v) + \alpha, (v, u) \in P$ иначе $0$.
+    \item Получили зациклившийся путь $P$. Вычленим из него цикл $C$. Положим $\beta \eqd \min\limits_{e \in C} f(e) \geq 1$. И аналогично прошлому пункту вычтем $\beta$ из $f$. Снова получили поток.
+\end{enumerate}
+
+Будем это делать до тех пор, пока $|f| > 0$. Далее, в следствие нашего алгоритма могли еще остаться циклы с $f(e) > 0$. Например, в такой ситуации:
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node style/.style={
+            circle, 
+            draw=black, 
+            thick, 
+            minimum size=8mm, 
+            font=\bfseries\large
+        },
+        edge style/.style={
+            ->, 
+            thick, 
+            >=Stealth, 
+            shorten >=2pt, 
+            shorten <=2pt
+        }
+    ]
+        \node[node style] (s) at (0, 0) {$s$};
+        \node[node style] (v1) at (3, 0) {$v_1$};
+        \node[node style] (v2) at (6, 0) {$v_2$};
+        \node[node style] (t) at (9, 0) {$t$};
+        \node[node style] (v4) at (3, 3) {$v_4$};
+        \node[node style] (v3) at (6, 3) {$v_3$};
+
+        \draw[edge style] (s) -- node[above, font=\large] {$10/10$} (v1);
+        \draw[edge style] (v1) -- node[below, font=\large] {$10/10$} (v2);
+        \draw[edge style] (v2) -- node[below, font=\large] {$10/10$} (t);
+
+        \draw[edge style] (v4) -- node[left, font=\large] {$5/5$} (v1);
+
+        \draw[edge style] (v1) -- node[left, font=\large, pos=0.6] {$5/5$} (v3);
+
+        \draw[edge style] (v3) -- node[above, font=\large] {$5/5$} (v4);
+
+    \end{tikzpicture}
+
+\end{figure}
+
+Мы могли убрать путь $s \to v_1 \to v_2 \to t$ и тогда бы остался цикл $v_1 \to v_3 \to v_4 \to v_1$.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node style/.style={
+            circle, 
+            draw=black, 
+            thick, 
+            minimum size=8mm, 
+            font=\bfseries\large
+        },
+        edge style/.style={
+            ->, 
+            thick, 
+            >=Stealth, 
+            shorten >=2pt, 
+            shorten <=2pt
+        }
+    ]
+        \node[node style] (s) at (0, 0) {$s$};
+        \node[node style] (v1) at (3, 0) {$v_1$};
+        \node[node style] (v2) at (6, 0) {$v_2$};
+        \node[node style] (t) at (9, 0) {$t$};
+        \node[node style] (v4) at (3, 3) {$v_4$};
+        \node[node style] (v3) at (6, 3) {$v_3$};
+
+        \draw[edge style, dashed, gray] (s) -- node[above, font=\large] {$10/10$} (v1);
+        \draw[edge style, dashed, gray] (v1) -- node[below, font=\large] {$10/10$} (v2);
+        \draw[edge style, dashed, gray] (v2) -- node[below, font=\large] {$10/10$} (t);
+
+        \draw[edge style, blue] (v4) -- node[left, font=\large] {$5/5$} (v1);
+
+        \draw[edge style, blue] (v1) -- node[left, font=\large, pos=0.6] {$5/5$} (v3);
+
+        \draw[edge style, blue] (v3) -- node[above, font=\large] {$5/5$} (v4);
+
+    \end{tikzpicture}
+
+\end{figure}
+
+Найдем все такие циклы вычтем из $f$ аналогично пункту 2 выше и уже после всего этого получим, что $f \equiv 0$ (не величина, а прям функция потока). Тогда пусть мы получили пути $P_1, P_2, \dots P_n$ и с ними соответственно коэффициенты $\alpha_1, \alpha_2, \dots \alpha_n$ из пункта 1, а также циклы $C_1, C_2, \dots C_m$ и $\beta_1, \beta_2, \dots \beta_m$ из пункта 2 и предыдущего предложения.
+Ясно, что в силу того, что мы в алгоритме итеративно вычитали из $f$ для соответствующих рёбер соответствующие коэффициенты $\{\alpha_i\}$ и $\{\beta_j\}$, то мы получили требуемые наборы.
+
+\end{proof}
+
+\Cons Пусть $\Ne$ -- сеть и $f$ -- поток в этой сети. Тогда найдутся простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m$.
+\begin{equation*}
+    f(u, v) = \sum\limits_{k = 1}^n \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \chi_{C_k}(u, v)
+\end{equation*}
+Причем $n = |f|$. То есть иначе говоря существует декомпозиция по <<единичным путям и циклам>>.
+\begin{proof}
+
+    По теореме выше, найдутся простые пути из $s$ в $t$ $P_1, P_2, \dots, P_l$, а также циклы $C_1, C_2, \dots C_p$, а также $\exists \alpha_1, \dots \alpha_l \in \N$ и $\beta_1, \dots, \beta_p \in \N$, которые удовлетворяют условию теоремы.
+    Теперь возьмем все такие $P_k$ и $C_k$ и проклонируем $\alpha_k$ и $\beta_k$ раз соответственно, но только уже с единичными коэффициентами. Получили требуемое.
+
+    Покажем, что $n = |f|$. Заметим, что все простые пути начинают свой путь с рёбер вида $(s, v) \in E$. Далее:
+    \begin{multline*}
+        |f| \eqd \sum\limits_{(s, v) \in E} f(s, v) = \sum\limits_{(s, v) \in E} \left[ \sum\limits_{k = 1}^n \chi_{P_k}(s, v) + \sum\limits_{k = 1}^m \chi_{C_k}(s, v) \right] = \\
+        = \sum\limits_{(s, v) \in E} \sum\limits_{k = 1}^n \chi_{P_k}(s, v) + \sum\limits_{(s, v) \in E}\sum\limits_{k = 1}^m \chi_{C_k}(s, v)
+    \end{multline*}
+
+    Покажем, что второе слагаемое есть ноль. Пусть $s \in C_k$, то есть $s$ находится в некотором цикле $\Rightarrow$ существует ребра $(p, s), (s, r) \in C_k$ -- входящее в $s$ и выходящее из него в цикле. Значит:
+    \begin{equation*}
+        \underbrace{\chi_{C_k} (p, s)}_{-1} + \underbrace{\chi_{C_k} (s, r)}_{1} = -1 + 1 = 0
+    \end{equation*}
+    Поэтому все слагаемые во втором слагаемом сократятся и получим:
+    \begin{equation*}
+        |f| = \sum\limits_{(s, v) \in E} \sum\limits_{k = 1}^n \chi_{P_k}(s, v)
+    \end{equation*}
+    Далее, если простой путь $P_k$ проходит по ребру $(s, v)$, то он точно не пройдет далее через некоторое другое ребро $(s, u)$, т.к. он бы пересек $s$ и не был бы простым. В то же время любой путь $P_k$ обязан проходить через какое-нибудь ребро $(s, v)$.
+    Поэтому получается, что у нас пути $P_1, \dots P_n$ <<раскиданы>> по ребрам вида $(s, v)$, при этом один путь $P_k$ не может проходить через два таких ребра сразу $\Rightarrow$ двойная сумма выше есть просто количество рёбер, т.е. $n$:
+    \begin{equation*}
+        |f| = \sum\limits_{(s, v) \in E} \sum\limits_{k = 1}^n \chi_{P_k}(s, v) = n
+    \end{equation*}
+    \begin{equation*}
+        |f| = n
+    \end{equation*}
+\end{proof}
+
+\Exe Как нужно поменять условия теоремы о декомпозиции, чтобы она была верна, если образы функций потока и емкости вещественны? Верно ли тогда предыдущее следствие?
+
+\section{Первая теорема Карзанова}
+\begingroup
+
+Если емкости вершин целочисленны (а в рамках наших лекций это так), то на самом деле можно дать другую верхнюю оценку на количество итераций схемы Диницы.
+В некоторых случаях данная оценка она может оценивать лучше, чем полученная в общем случае $\O(|V|)$. Однако данная оценка не выражается в наших привычных терминах $|E|$ и $|V|$, поэтому надо ввести некоторую дополнительную терминологию.
+
+Всюду далее в этом разделе считаем, что зафиксирована некоторая транспортная сеть $\mathcal{N} = (G, s, t, c)$.
+
+\newcommand{\p}{\mathbf{p}}
+
+\renewcommand{\P}{\mathbf{P}}
+
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^+(v) \overset{def}{=} \min\limits_{(u, v) \in E} c(u, v)$.
+
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^-(v) \overset{def}{=} \min\limits_{(u, v) \in E} c(u, v)$.
+
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $\p(v) \overset{def}{=} \min\{c^+(v), c^-(v)\}$ -- потенциал вершины $v$.
+
+О потенциале вершины можно думать как о некой верхней оценки потока, который может пройти через эту вершину.
+
+\Def Пусть $\Ne$ -- сеть. Тогда потенциалом сети $\Ne$ будем называть
+\begin{equation*}
+    \P(\Ne) \eqd \sum\limits_{v \in V - s, t} \p(v)
+\end{equation*}
+
+На первый взгляд определение потенциала сети выше достаточно абстрактное и ни к чему необязывающее.
+Ну действительно, с чего бы вдруг сумма каких-то оценок потоков в каждой вершины может что-то значить.
+Однако певрая теорема Карзанова утверждает, что число итераций схемы Диница есть $\O\left(\sqrt {\P(\Ne)}\right)$. Перед доказательством данной теоремы мы докажем несколько утврерждений.
+
+\Def $V_d \eqd \{ v: \delta(s, v) \}$
+
+Покажем очевидные утверждения.
+
+\St $\forall k \geq 2 \, \nexists (u, v) \in E: u \in V_d, v \in V_{d+k}$
+\begin{proof}
+    
+    Действительно, если бы такое ребро существовало, то $v$ было бы на расстоянии $d + 1 < d + k \Rightarrow v \in V_{d + 1}$, противоречие.
+
+\end{proof}
+
+\St Верно следующее:
+\begin{equation*}
+    \sum\limits_{d = 1}^{\delta(s, t) - 1} \P(V_d) \leq \P(\Ne) 
+\end{equation*}
+\begin{proof}
+    \begin{equation*}
+        \sum\limits_{d = 1}^{\delta(s, t) - 1} \P(V_d) = \sum\limits_{d = 1}^{\delta(s, t) - 1} \sum\limits_{v \in V_d} \p(v) = \left\{ \bigcup_{d = 1}^{\delta(s, t) - 1} V_d \subset V \right\} = \sum\limits_{v \in V - s, t} \p(v) \leq \P(\Ne)
+    \end{equation*}
+\end{proof}
+
+\Def Пусть $V' \subset V$. Тогда:
+\begin{equation*}
+    \P(V') \eqd \sum\limits_{v \in V' - s, t} \p(v)
+\end{equation*}
+
+\St Пусть $f_0$ -- максимальный поток в сети. Тогда $\forall d \in 1 \dots \delta(t) - 1 \hookrightarrow |f_0| \leq \P(V_d)$
+\begin{proof}
+    
+    По следствию теоремы о декомпозиции, найдутся <<единичные>> простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m:$
+    \begin{equation*}
+        f_0(u, v) = \sum\limits_{k = 1}^n \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \chi_{C_k}(u, v)
+    \end{equation*}
+    Далее, в силу того, что $V_d$ -- множество вершин на расстоянии $d \leq \delta(s, t)$, то всякий простой путь $P_k$ содержит хотя бы одну вершину из $V_d$. Значит, он уменьшает <<входную и выходную>> емкости хотя бы на 1. Значит все пути в сумме уменьшают <<входные и выходные>> емкости хотя бы на $n$.
+    Из этого моментально следует, что $\P(V_d) - n \geq 0 \iff \P(V_d) \geq n$, иначе бы не хватило емкости. С другой стороны, по тому же следствию из теоремы о декомпозиции, $|f_0| = n \Rightarrow \P(V_d) \geq n = |f_0|$. Получили требуемое.
+
+\end{proof}
+
+\Lm Пусть $f_0$ -- максимальный поток в сети $\Ne$. Тогда верно следующее соотношение:
+\begin{equation*}
+    \delta_{\Ne}(s, t) \leq \frac{\P(\Ne)}{|f_0|} + 1
+\end{equation*}
+\begin{proof}
+    
+    По лемме выше, $\forall d \in 1 \dots \delta(s, t) - 1 \hookrightarrow |f_0| \leq \P(V_d)$. Тогда:
+    \begin{equation*}
+        (\delta_\Ne(s, t) - 1) |f_0| \leq \sum\limits_{d = 1}^{\delta_\Ne(s, t) - 1} \P (V_d) \leq \P(\Ne)
+    \end{equation*}
+    \begin{equation*}
+        \delta_\Ne(s, t) - 1 \leq \frac{\P(\Ne)}{|f_0|}
+    \end{equation*}
+    \begin{equation*}
+        \delta_\Ne(s, t) \leq \frac{\P(\Ne)}{|f_0|} + 1
+    \end{equation*}
+
+\end{proof}
+
+\Lm Пусть $f$ -- поток в сети $\Ne$. Тогда $\P(\Ne) = \P\left(\Ne_f\right)$.
+\begin{proof}
+
+    Покажем, что $c^+$ и $c^-$ не изменились в остаточной сети. Покажем для $c^+$, т.к. для $c^-$ аналогично.
+
+    Рассмотрим вершину $v \in V - s, t$.
+
+    \begin{multline*}
+        c_f^+(v) = \sum\limits_{(u, v) \in E} c_f(u, v) = \sum\limits_{(u, v) \in E} c(u, v) - f(u, v) = \\ 
+            = \sum\limits_{(u, v) \in E} c(u, v) - \sum\limits_{(u, v) \in E} f(u, v) = 
+    \end{multline*}
+
+\end{proof}
+
+\Th{Первая теорема Карзанова} Количество итераций схемы Диница равно $\O\left(\sqrt {\P(\Ne)}\right)$.
+\begin{proof}
+    
+    Запустим схему Диница на $\sqrt {\P(\Ne)}$. Если больше запускать ее не надо, то это тривиальный случай. Допустим, еще можно запустить итерации. 
+    В силу того, что после каждой итерации схемы расстояние от истока до стока уменьшается строго на 1, то в сверху количество итераций оценивается как $\delta_\Ne (s, t)$.
+
+\end{proof}
+
+\endgroup
