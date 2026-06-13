@@ -345,7 +345,7 @@
     \State $dp[k][u][v] = +\infty, \forall k \in [1, n], \forall u \neq v \in V$
     \For{$k \in 1\dots |V|$}
         \For{$u \in V$}
-            \For{$u \in V$}
+            \For{$v \in V$}
                 \State $dp[k][u][v] \gets \min(dp[k - 1][u][v_k] + dp[k - 1][v_k][v], dp[k][u][v])$
             \EndFor
         \EndFor
