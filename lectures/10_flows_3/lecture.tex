@@ -566,9 +566,9 @@ $E_L$ получается же только лишь рёбрами, котор
 
 \renewcommand{\P}{\mathbf{P}}
 
-\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^+(v) \overset{def}{=} \min\limits_{(u, v) \in E} c(u, v)$.
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^+(v) \overset{def}{=} \sum\limits_{(u, v) \in E} c(u, v)$.
 
-\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^-(v) \overset{def}{=} \min\limits_{(u, v) \in E} c(u, v)$.
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^-(v) \overset{def}{=} \sum\limits_{(v, u) \in E} c(v, u)$.
 
 \Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $\p(v) \overset{def}{=} \min\{c^+(v), c^-(v)\}$ -- потенциал вершины $v$.
 
