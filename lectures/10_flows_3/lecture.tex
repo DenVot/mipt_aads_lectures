@@ -1,0 +1,761 @@
+\section{Введение}
+
+На прошлой лекции было показано, что задача о максимальном потоке решается за хоть сколько-то приемлимое время с помощью алгоритма Эдмондса-Карпа. 
+Но глобально этот алгоритм особо ничем не отличается от алгоритма Форда-Фалкерсона, главная сложность там это показать, что мы имеем действительно асимптотику $\O\left(|V||E|^2\right)$.
+Однако существует алгоритм, который нам позволит <<скинуть>> квадрат на множество вершин в худшем случае. Правда корректней тут говорить не сам алгоритм, а скорее схема, которая нам позволяет это сделать при должной имплементации. 
+Эту схему называют \textit{схемой Диница}. Ключевой особенностью схемы является то, что мы ищем так называемые \textit{блокирующие потоки} в \textit{слоистой сети}, которую мы введем позднее. Центральным вопросом в этой схеме будет ответ на вопрос <<А как искать блокирующий поток?>>. 
+На лекции будет приведен жадный способ их поиска, а также в качестве дополнительного материала будет рассмотрен способ удаляющего обхода, который как раз нам и позволит получить желаемую асимптотику $\O\left(|V|^2|E|\right)$.
+Далее мы установим связь между <<пропускной способностью сети>> и количеством итераций схемы Диница.
+
+Всюду на лекции мы считаем, что задана некоторая сеть $\mathcal{N} = (G, s, t, c)$.
+
+\section{Блокирующие потоки}
+
+\Def Пусть $f$ -- поток в сети $\mathcal{N}$. Ребро $e$ называется \textit{насыщенным}, если $f(e) = c(e)$.
+
+\Def Поток $f$ в сети $\mathcal{N}$ будем называть \textit{блокирующим}, если его нельзя увеличить без введения обратных рёбер.
+
+\Exe Покажите, что следующее определение блокирующего потока эквивалентно предыдущему. Пусть $f$ -- поток в сети $\mathcal{N}$. 
+Если в $\mathcal{N}$ не существует пути от $s$ до $t$, который не проходил бы через насыщенные ребра потоком $f$, то поток $f$ называется \textit{блокирующим потоком}.
+
+Читателю предлагается для себя ответить на вопрос: <<Какая связь между блокирующим потоком и максимальным? Является ли максимальный поток блокирующим? А наоборот?>>. В одну сторону очевидно: максимальный поток является блокирующим. Действительно, предположим, что это не так. 
+Пусть $f$ максимальный, но не блокирующий поток. Тогда по определению блокирующего потока, существует путь не проходящий по насыщенным потоком $f$ рёбрам.
+Возьмем такой путь $P$. Пустим вдоль него поток $f'$, тогда ясно, что $\forall e \in P \hookrightarrow f'(e) = c(P)$ и это поток в остаточной сети $\mathcal{N}_f$. 
+Из леммы 8.4.1 следует, что $f + f'$ тоже есть поток и более того $|f + f'| > |f|$, что противоречит определению $f$. В обратную сторону существует контрпример:
+
+\begin{figure*}[h]
+    \centering
+    \begin{tikzpicture}[>=Stealth, node distance=2cm, auto]
+        
+        \node[circle, draw, fill=white!20, minimum size=5mm] (A) at (0,0) {};
+        \node[circle, draw, fill=white!20, minimum size=5mm] (B) at (2,1.5) {};
+        \node[circle, draw, fill=white!20, minimum size=5mm] (C) at (2,-1.5) {};
+        \node[circle, draw, fill=white!20, minimum size=5mm] (D) at (4,0) {};
+
+        
+        \draw[->] (A) -- (B) node[midway, above left] {1};
+        \draw[->] (C) -- (D) node[midway, below right] {1};
+
+        
+        \draw[->, red] (A) -- (C) node[midway, below left] {1};
+        \draw[->, red] (C) -- (B) node[midway, right] {1};
+        \draw[->, red] (B) -- (D) node[midway, above right] {1};
+    \end{tikzpicture}    
+\end{figure*}
+
+На рисунке показан блокирующий поток с величиной 1, однако, очевидно, если пусть поток по <<параллельным рёбрам>>, то он станет размера 4.
+
+\section{Слоистая сеть}
+
+\Def Слоистой сетью $(G_L\langle V_L, E_L \rangle, s, t, c)$ по сети $\mathcal{N}$ будем называть сеть построенную следующим образом:
+\begin{equation*}
+    V_d \overset{def}{=} \{ v: \delta(s, v) = d \}, d \in 0 \dots \delta(t)
+\end{equation*}
+\begin{equation*}
+    V_L \overset{def}{=} \bigcup\limits_{d = 0}^{\delta(t)} V_d
+\end{equation*}
+$E_L$ получается же только лишь рёбрами, которые идут из $V_{d}$ в $V_{d + 1}$ для всякого $d$.
+
+
+\begin{figure*}[h]
+    \centering
+    \begin{tikzpicture}[>=Stealth, node distance=2cm, auto]
+        
+        \node[circle, draw, fill=white!20, minimum size=5mm] (A) at (0,0) {};
+        \node[circle, draw, fill=white!20, minimum size=5mm] (B) at (2,1.5) {};
+        \node[circle, draw, fill=white!20, minimum size=5mm] (C) at (2,-1.5) {};
+        \node[circle, draw, fill=white!20, minimum size=5mm] (D) at (4,0) {};
+
+        
+        \draw[->] (A) -- (B) node[midway, above left] {1};
+        \draw[->] (C) -- (D) node[midway, below right] {1};
+
+        
+        \draw[->, red] (A) -- (C) node[midway, below left] {1};
+        \draw[->, red] (C) -- (B) node[midway, right] {1};
+        \draw[->, red] (B) -- (D) node[midway, above right] {1};
+    \end{tikzpicture}    
+\end{figure*}
+
+На рисунке показан блокирующий поток с величиной 1, однако, очевидно, если пусть поток по <<параллельным рёбрам>>, то он станет размера 4.
+
+Будем обозначать $\texttt{FIND\_BLOCK\_FLOW(}\mathcal{N}\texttt{)}$ функцию, которая по сети $\mathcal{N}$ находит в ней блокирующий поток.
+
+\section{Слоистая сеть}
+
+\Def Слоистой сетью $(G_L\langle V_L, E_L \rangle, s, t, c)$ по сети $\mathcal{N}$ будем называть сеть построенную следующим образом:
+\begin{equation*}
+    V_d \overset{def}{=} \{ v: \delta(s, v) = d \}, d \in 0 \dots \delta(t)
+\end{equation*}
+\begin{equation*}
+    V_L \overset{def}{=} \bigcup\limits_{d = 0}^{\delta(t)} V_d
+\end{equation*}
+$E_L$ получается же только лишь рёбрами, которые идут из $V_{d}$ в $V_{d + 1}$ для всякого $d$. Слоистую сеть порожденную сетью $\mathcal{N}$ будем обозначать $\mathcal{N}_L$ или $\mathcal{N}^L$.
+
+Приведем пример слоистой сети. Ниже дан исходный граф, а далее его слоистая версия.
+
+\begin{figure*}[h]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.5cm and 2cm,
+        vertex/.style={circle, draw, thick, minimum size=9mm, inner sep=1pt, 
+                    font=\bfseries\sffamily, fill=white},
+        edge/.style={-{Stealth[length=3mm]}, thick, draw=black!70},
+        layerbox/.style={draw=red!60!black, densely dashed, thick, rounded corners=5pt, 
+                        fill=red!5, inner sep=8mm},
+        layerlabel/.style={font=\small\bfseries, text=red!70!black},
+        maintitle/.style={font=\Large\bfseries\sffamily, text=black!80},
+        >=stealth,
+        scale=0.75
+    ]
+
+    \node[vertex] (s) at (0,0) {$s$};
+    \node[vertex] (a) at (2,2) {$1$};
+    \node[vertex] (b) at (2,-2) {$2$};
+    \node[vertex] (c) at (4,3) {$3$};
+    \node[vertex] (d) at (4,0) {$4$};
+    \node[vertex] (e) at (4,-3) {$5$};
+    \node[vertex] (t) at (6,0) {$t$};
+
+    \draw[edge] (s) to (a);
+    \draw[edge] (s) to (b);
+    \draw[edge] (a) to (c);
+    \draw[edge] (a) to (b);
+    \draw[edge] (d) to (b);
+    \draw[edge] (a) to (d);
+    \draw[edge] (b) to (c);
+    \draw[edge] (b) to (e);
+    \draw[edge] (c) to (t);
+    \draw[edge] (d) to (t);
+    \draw[edge] (e) to (t);
+
+    \end{tikzpicture}
+\end{figure*}
+
+\begin{figure*}[h]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.5cm and 2cm,
+        vertex/.style={circle, draw, thick, minimum size=9mm, inner sep=1pt, 
+                    font=\bfseries\sffamily, fill=white},
+        edge/.style={-{Stealth[length=3mm]}, thick, draw=black!70},
+        layerbox/.style={draw=red!60!black, densely dashed, thick, rounded corners=5pt, 
+                        fill=red!5, inner sep=3mm},
+        layerlabel/.style={font=\small\bfseries, text=red!70!black},
+        maintitle/.style={font=\Large\bfseries\sffamily, text=black!80},
+        >=stealth,
+        scale=0.75
+    ]
+        \node[vertex] (sL) at (0,0) {$s$};
+
+        \node[vertex] (aL) at (3,1.5) {$1$};
+        \node[vertex] (bL) at (3,-1.5) {$2$};
+
+        \node[vertex] (cL) at (6,2.5) {$3$};
+        \node[vertex] (dL) at (6,0) {$4$};
+        \node[vertex] (eL) at (6,-2.5) {$5$};
+
+        \node[vertex] (tL) at (9,0) {$t$};
+
+        \draw[edge] (sL) to (aL);
+        \draw[edge] (sL) to (bL);
+        \draw[edge] (aL) to (cL);
+        \draw[edge] (aL) to (dL);
+        \draw[edge, dashed, gray] (aL) to (bL);
+        \draw[edge, dashed, gray] (dL) to (bL);
+        \draw[edge] (bL) to (cL);
+        \draw[edge] (bL) to (eL);
+        \draw[edge] (cL) to (tL);
+        \draw[edge] (dL) to (tL);
+        \draw[edge] (eL) to (tL);
+
+        \begin{scope}[on background layer]
+            \node[layerbox, fit=(sL)] (L0) {};
+            \node[layerbox, fit=(aL)(bL)] (L1) {};
+            \node[layerbox, fit=(cL)(dL)(eL)] (L2) {};
+            \node[layerbox, fit=(tL)] (L3) {};
+        \end{scope}
+    \end{tikzpicture}
+\end{figure*}
+Обратите внимание на пунктирные рёбра -- это те ребра, которые были в исходном графе, но не вошли в слоистую сеть.
+
+Будем обозначать $\texttt{BUILD\_LAYERED(}\mathcal{N}\texttt{)}$ функцию, которая по сети $\mathcal{N}$ строит слоистую сеть.
+
+\St Слоистая сеть содержит все кратчайшие пути от $s$ до $t$ и всякий путь в ней от $s$ до $t$ кратчайший.
+\begin{proof}
+    
+    Рассмотрим произвольный путь $P = s \to v_1 \to v_2 \to \dots v_p \to t$ в слоистой сети. Заметим, что $p = \delta(t) - 1$, т.к. чтобы достичь $t$ мы должны пройти по всем слоям и последний обязательно будет под номером $\delta(t) - 1$.
+    Значит вся длина пути $|P| = \delta(t)$, то есть он кратчайший.
+
+    Покажем, что в оригинальной сети не было других кратчайших путей, которых не было бы в слоистой сети. Предположим, такой нашелся -- $P_0 = s \to v_1 \to v_2 \to \dots v_{\delta(t) - 1} \to t$.
+    Вспомним, что всякий подпуть пути $P_0$ кратчайший. Тогда из этого следует, что $v_i \in V_i$.
+    Более того, коль скоро $(v_i, v_{i + 1}) \in P_0$ и $v_i \in V_i, v_{i + 1} \in V_{i + 1} \Rightarrow$ по определению $E_L$, $(v_{i}, v_{i + 1}) \in E_L$. Аналогично, $(s, v_1)$ и $(v_{\delta(t) - 1}, t)$ лежат в $E_L$.
+    Получается, все рёбра $P_0$ есть в слоистой сети, значит, $P_0$ находится в ней, что противоречит предположению.
+
+\end{proof}
+
+\section{Схема Диница}
+
+Суть схемы достаточно проста. Строим слоистую по остаточной и находим в ней блокирующий поток.
+
+\begin{algorithm}[H]
+\caption{Схема Диница}
+\begin{algorithmic}[1]
+
+\Function{DINIC}{$\mathcal{N}$}
+    \State $f \gets []$
+    \While{$\text{есть блокирующий поток}$}
+        \State $\mathcal{N}_L \gets \texttt{BUILD\_LAYERED(}\mathcal{N}_f\texttt{)}$
+        \State $f' \gets \texttt{FIND\_BLOCK\_FLOW(}\mathcal{N}_L\texttt{)}$
+        \State $f \gets f + f'$
+    \EndWhile
+    \State \Return $f$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\St \texttt{DINIC} возвращает максимальный поток.
+\begin{proof}
+
+    Алгоритм завершается, когда в остаточной пути нет блокирующего потока. Если нет блокирующего потока, значит в остаточной сети нет пути из $s$ в $t$, следовательно, по теореме Форда-Фалкерсона, $f$ -- максимальный.
+
+\end{proof}
+
+\Lm После каждой итерации схемы Диница расстояние от истока к стоку в остаточной сети строго возрастает.
+\begin{proof}
+
+    \textit{...Здесь типа будет доказательство с лекции...}
+
+\end{proof}
+
+\Lm После каждой итерации схемы Диница расстояние от истока к стоку в остаточной сети строго возрастает.
+\begin{proof}
+
+    Очевидно, что расстояние не может уменьшаться. Действительно, используя лемму 9.2.2 (если убрать из неё алгоритм Эдмондса-Карпа и работать в предположениях, что мы просто пускаем потоки вдоль кратчайших путей) получаем требуемое.
+
+    Пусть на некоторый итерации поток был равен $f_0$ и после неё был найден блокирующий поток $f'$ в слоистой сети, порожденной остаточной сетью $G_f$.
+    И пусть после этой итерации расстояние от $s$ до $t$ в $G_{f_0 + f'}$ не изменилось. Для определённости обозначим расстояние за $d$. И обозначим $G_0 \overset{def}{=} G_{f_0}, G_1 \overset{def}{=} G_{f_0 + f'}, \delta_0(s, v) \overset{def}{=} \delta_{G_{f_0}}(s, v), \delta_1(s, v) \overset{def}{=} \delta_{G_{f_0 + f'}}(s, v)$.
+
+    Коль скоро расстояние не изменилось, существует путь $P$ длины $d$ в остаточной сети $G_1$. 
+
+    Предположим, что он был в $G_0$. В силу того, что данный путь был кратчайшим от $s$ до $t$ в $G_0$, то, по утверждению 10.4.1, он находился в слоистой сети $G^L_0$.
+    Но в силу того, что $P$ остался в сети $G_1$, ни одно ребро $P$ не насыщенно потоком $f_0$. Однако, по определению, $f_0$ блокирующий и всякий путь в $G_0^L$ (в том числе $P$), из $s$ в $t$ должен содержать рёбра насыщенные этим потоком. Противоречие.
+
+    Утверждается, что существует некоторая вершина $v_0$, лежащая на данном пути, до которой расстояние увеличилось.
+    Предположим противное $\Rightarrow$ расстояние до всех вершин на данном пути не изменилось. В $G_1$ есть только рёбра из $G_0$ или обратные к ним.
+    Если бы $P$ состоял бы только из рёбер $G_0$, то мы приходим в прямое противоречие с предыдущим абзацем, т.к. получается что $P$ был в $G_0$. Значит $\exists (u, v) \in P$ обратное ребро к некоторому ребру из $G_0$.
+    В силу того, что $P$ кратчайший, то $\delta_1(s, v) = \delta_1(s, u) + 1$.
+    Более того, $(v, u)$ было в слоистой сети $G^L_0 \Rightarrow \delta_0(s, u) = \delta_0(s, v) + 1$ (т.к. слоистая сеть -- множество кратчайших путей, а подпуть кратчайшего кратчайший). Далее, комбинируя тот факт что расстояния не изменились:
+    \begin{equation*}
+        \begin{cases}
+            \delta_1(s, v) = \delta_1(s, u) + 1 \\
+            \delta_0(s, u) = \delta_0(s, v) + 1
+        \end{cases}    
+    \end{equation*}
+    \begin{equation*}
+            \delta_1(s, v) + \delta_0(s, u) = \delta_1(s, u) + \delta_0(s, v) + 1 + 1
+    \end{equation*}
+    \begin{equation*}
+            \underbrace{\delta_1(s, v)}_{\delta_0(s, v)} + \delta_0(s, u) = \underbrace{\delta_1(s, u)}_{\delta_0(s, u)} + \delta_0(s, v) + 2
+    \end{equation*}
+    \begin{equation*}
+            \delta_0(s, v) + \delta_0(s, u) = \delta_0(s, u) + \delta_0(s, v) + 2
+    \end{equation*}
+    \begin{equation*}
+            0 = 2
+    \end{equation*}
+    Противоречие. Значит, существует вершина на пути $P$, до которой увеличилось расстояние. Возьмем самую последнюю из них на пути и обозначим $v_0$
+
+    Предположим, что $v_0 \neq t \Rightarrow$ есть ребро $(v_0, u_0)$ на пути. Далее, $\delta_1(s, u_0) = \delta_1(s, v_0) + 1$, т.к. подпуть кратчайшего пути кратчайший.
+    В силу выбора $v_0$, расстояние до $u_0$ не изменилось. Рассмотрим случаи:
+    \begin{itemize}
+        \item Ребро $(v_0, u_0)$ было в $G_0^L \Rightarrow \delta_0(s, u_0) = \delta_0(s, v_0) + 1$. 
+        С другой стороны, $\delta_0(s, u_0) = \delta_1(s, u_0) \Rightarrow \delta_1(s, v_0) + 1 = \delta_0(s, v_0) + 1 \Rightarrow \delta_1(s, v_0) = \delta_0(s, v_0)$. Но ведь $\delta_1(s, v_0) > \delta_0(s, v_1)$. Противоречие.
+        \item Ребро $(v_0, u_0)$ не было в $G_0^L$. В силу того, что $(v_0, u_0)$ появилось, то в $G_0^L$ было обратное к нему, то есть $(u_0, v_0)$. 
+        Значит, $\delta_0(s, v_0) = \delta_0(s, u_0) + 1 = \delta_1(s, u_0) + 1 = \delta_1(s, v_0) + 2 \Rightarrow \delta_0(s, v_0) > \delta_1(s, v_0)$. Противоречие.
+    \end{itemize}
+    Значит, $v_0 = t \Rightarrow$ до $t$ расстояние увеличилось.
+
+\end{proof}
+
+\St Число итераций схемы Диница $\O(|V|)$.
+\begin{proof}
+    
+    По лемме 10.5.2, расстояние от $s$ до $t$ строго возрастает. В тоже время максимальная длина пути от $s$ до $t$ не более $|V| - 1$. Получили требуемое.
+
+\end{proof}
+
+Теперь мы понимаем сколько итераций делает сама схема. 
+Общее время работы определяется внутренним временем работы одной итерации цикла, которая состоит из построения слоистой сети и поика блокирующего потока и равна $\O(|E| + \tau)$, где $\tau$ -- время поиска блокирующего потока. Значит, общее время работы $\O(|V|(|E| + \tau))$.
+
+Осталось понять как искать блокирующий поток. Вообще, вариантов как его искать много, однако мы ограничимся одним.
+
+\subsection{Удаляющий обход}
+
+Удаляющий обход заключается в том, что мы циклически запускаем DFS из $s$ в $t$ и пускаем поток вдоль пути, пока можем. 
+Если в процессе DFS через ребро $e$ не смогли пустить, то мы и дальше не сможем через него пустить, значит, его можно не рассматривать далее и удалить.
+
+Как это реализовать в компьютере? В списке смежности будем хранить указатель на первое неудаленное ребро. Если нам не удалось пустить поток через ребро, то двигаем указатель вперед.
+Реализацию на языке C++ можно посмотреть \href{https://wiki.algocode.ru/index.php?title=Алгоритмы_поиска_блокирующего_потока}{здесь}. \textit{Настоятельно рекомендуется ознакомиться перед тем как читать далее}.
+
+Сколько раз мы так сможем пустить DFS? В худшем случае у нас количество путей -- это количество рёбер, т.е. $\O(|E|)$ итераций.
+
+Далее, сколько работает каждая итерация? Это вопрос чуть более нетривиальный и быть может не с первого раза понятный. Когда мы в DFS для очередной вершины рассматриваем ребро $e$, то мы либо пропускаем через него поток, либо понимаем, что не можем его пустить и двигаем указатель вперед. Рассмотрим подробнее ситуацию, когда мы не смогли пустить поток.
+Как мы это понимаем? Выполняя рекурсивные шаги DFS, мы видим, что не можем достичь $t$, посредством того, что мы во всех путях рекурсии упираемся в другие вершины. А значит, как только мы вернемся по стеку рекурсии к ребру $e$, мы сдвинем для него указатель. 
+Но важно, что перед этим мы еще сдвинем указатель для рёбер, которые были выше по стеку рекурсии. То есть для картинки ниже мы еще сдвинем указатели для $e_1, e_2, \dots e_n$ в процессе поднятия по стеку рекурсии к $e$.
+
+\begin{figure*}[h]
+    \centering
+    \begin{tikzpicture}[
+        node/.style={circle, draw, thick, minimum size=8mm, inner sep=0pt},
+        dot/.style={inner sep=2pt, font=\large},
+        arrow/.style={-{Stealth[length=3mm]}, thick},
+        wavy/.style={decorate, decoration={snake, amplitude=1.2mm, segment length=4mm}},
+        scale=0.75
+    ]
+
+    % Узлы
+    \node[node] (s) {$s$};
+    \node[node, right=1.8cm of s] (u) {$u$};
+    \node[node, right=1.6cm of u] (v) {$v$};
+    \node[node, right=1.6cm of v] (w1) {};
+    \node[dot,   right=1.2cm of w1] (dots) {$\cdots$};
+    \node[node,  right=1.2cm of dots] (wn) {};
+
+    % Волнистая стрелка s -> u
+    \draw[wavy, arrow] (s) -- (u);
+
+    % Прямые рёбра с подписями
+    \draw[arrow] (u)  -- node[above] {$e$}   (v);
+    \draw[arrow] (v)  -- node[above] {$e_1$} (w1);
+    \draw[arrow] (w1) -- node[above] {$e_2$} (dots.west);
+    \draw[arrow] (dots.east) -- node[above] {$e_n$} (wn);
+
+    \end{tikzpicture}
+    
+\end{figure*}
+
+То есть если рассмотреть множество путей, которые мы рассмотрим, то будет примерно граф вида:
+
+\begin{figure*}[h]
+    \centering
+    \begin{tikzpicture}[
+        node/.style={circle, draw, thick, minimum size=8mm, inner sep=0pt},
+        arrow/.style={-{Stealth[length=3mm, width=2mm]}, thick, shorten >=1pt, shorten <=1pt}
+    ]
+
+    \node[node] (s) {$s$};
+
+    \node[node, above right=1.2cm and 2cm of s] (u1) {};
+    \node[node, right=1.5cm of u1] (u2) {};
+
+    \node[node, below right=1.2cm and 2cm of s] (v1) {};
+    \node[node, right=1.5cm of v1] (v2) {};
+    \node[node, right=1.5cm of v2] (v3) {};
+
+    \node[node, right=2cm of s] (w1) {};
+    \node[node, right=1.5cm of w1] (w2) {};
+    \node[node, right=1.5cm of w2] (w3) {};
+
+    \node[node, below right=2.8cm and 1.5cm of s] (x1) {};
+    \node[node, right=1.5cm of x1] (x2) {};
+    \node[node, right=1.5cm of x2] (x3) {};
+    \node[node, right=1.5cm of x3] (t) {$t$};
+
+    \draw[arrow, red] (s) -- (u1);
+    \draw[arrow, red] (s) -- (v1);
+    \draw[arrow, red] (s) -- (w1);
+    \draw[arrow, blue] (s) -- (x1);
+
+    \draw[arrow, red] (u1) -- (u2);
+    \draw[arrow, red] (u1) -- (w2);
+    \draw[arrow, red] (v1) -- (v2);
+    \draw[arrow, red] (v2) -- (v3);
+
+    \draw[arrow, red] (w1) -- (w2);
+    \draw[arrow, red] (w2) -- (w3);
+
+    \draw[arrow, blue] (x1) -- (x2);
+    \draw[arrow, blue] (x2) -- (x3);
+    \draw[arrow, blue] (x3) -- (t);
+    \end{tikzpicture}
+\end{figure*}
+
+Где часть <<путей>>, где мы не смогли найти путь до $t$, и \textit{один простой путь от $s$ до $t$}. Соответственно, у тех путей, которые не ведут в $t$, мы удаляем ребра (помечены красным).
+Время работы одной итерации оценивается количеством рёбер, которые мы посетили суммарно: количество <<удачных>> (синих) плюс <<неудачных>> (красных). Количество <<удачных>> рёбер  -- это длина простого пути от $s$ до $t$, т.е. $\O(|V|)$. Количество же <<неудачных>> есть ровно количество перемещений указателей. Для $i$-ой итерации мы обозначим количество сдвигов указателей $K_i$.
+
+Далее, в силу того, что итераций в худшем случае есть $\O(|E|)$, то мы пройдем в худшем случае по $\O(|E|)$ простым путям. Каждый проход по простому пути, по рассуждениям выше, $\O(|V|)$. Значит <<суммарно по синим рёбрам в рамках всего алгоритма>> мы пройдем $\O(|V||E|)$ раз.
+По красным же ребрам <<суммарно в рамках всего алгоритма>> мы пройдем $\O\left( \sum\limits_{i} K_i \right)$. То есть итоговое время работы алгоритма $\O\left( |V| |E| + \sum\limits_{i} K_i \right)$.
+Однако в свою очередь, для каждого ребра мы в худшем случае один раз свдинем указатель, значит, $\sum\limits_{i} K_i \leq |E| \Rightarrow \O\left( \sum\limits_{i} K_i \right) = \O(|E|)$.
+Значит итоговая асимптотика поиска блокирующего потока удаляющим обходом:
+\begin{equation*}
+    \O\left( |V| |E| + \sum\limits_{i} K_i \right) = \O\left( |V| |E| + |E| \right) = \O\left( |V| |E| \right)
+\end{equation*}
+
+\Cons Время работы схемы Диницы с использованием удаляющего обхода составляет $\O\left(|V|^2 |E|\right)$
+\begin{proof}
+    \begin{equation*}
+        \O(|V|(|E| + \tau)) = \O\left(|V|^2|E|\right)
+    \end{equation*}
+\end{proof}
+
+То есть мы получили асимптотически более быстрый алгоритм поиска максимального потока, чем алгоритм Эдмондса-Карпа, который работает за $\O\left( |V||E|^2 \right)$.
+
+\section{Декомпозиция потока}
+
+Следующая теорема показывает относительно интуитивные мысли о том, что поток <<распадается>> на пути и циклы.
+
+\Def Пусть дано множество ребер $E$. Тогда
+\begin{equation*}
+    \chi_E (u, v) \eqd \begin{cases}
+        1, (u, v) \in E \\
+        -1, (v, u) \in E \\
+        0, else
+    \end{cases}
+\end{equation*}
+
+\Th{О декомпозиции} Пусть $\Ne$ -- сеть и $f$ -- поток в этой сети. Тогда найдутся простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m$.
+А также $\exists \alpha_1, \dots \alpha_n \in \N$ и $\beta_1, \dots, \beta_m \in \N$ такие, что:
+\begin{equation*}
+    f(u, v) = \sum\limits_{k = 1}^n \alpha_k \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \beta_k \chi_{C_k}(u, v)
+\end{equation*}
+То есть $f(u, v)$ есть <<сумма потоков>> путей, куда входит ребро $(u, v)$, а также быть может сумма <<потоков>> каких-то циклов.
+Вообще говоря, <<поток>> в цикле называется циркуляцией (но этого знать необязательно) и это объект немного другой природы, который не рассматривается в нашем курсе.
+\begin{proof}
+    
+Пусть из $s$ выходит хотя бы одно ребро $(s, v)$ с положительным потоком. Если такового нет, то $f \equiv 0$ и теорема тривиальна. Иначе перейдем по этому ребру в вершину $v$. 
+Если $v = t$, то нашли путь $P$ из $s$ в $t$. Иначе, по закону сохранения, потока найдется ребро $(v, u)$ с положительным потоком. Если $u = t$, то нашли опять простой путь из $s$ в $t$. Иначе применим тот же алгоритм действий, что и для вершины $v$. И будем его применять, пока не достигнем, либо $t$, либо вершину, которую мы посетили на предыдущих шагах.
+
+Рассмотрим случаи:
+\begin{enumerate}
+    \item Получили простой путь $P$ из $s$ в $t$. Положим $\alpha \eqd \min\limits_{e \in P} f(e)$. Очевидно, $\alpha > 0$. Более того, коль скоро емкости целочисленны $\Rightarrow \alpha \geq 1$. Уменьшим $f$ на $\alpha$. То есть новый рассматриваемый поток (и это действительно поток) на ребре $(u, v)$ будет равен $f(u, v) - \alpha, (u, v) \in P$ или $f(u, v) + \alpha, (v, u) \in P$ иначе $0$.
+    \item Получили зациклившийся путь $P$. Вычленим из него цикл $C$. Положим $\beta \eqd \min\limits_{e \in C} f(e) \geq 1$. И аналогично прошлому пункту вычтем $\beta$ из $f$. Снова получили поток.
+\end{enumerate}
+
+Будем это делать до тех пор, пока $|f| > 0$. Далее, в следствие нашего алгоритма могли еще остаться циклы с $f(e) > 0$. Например, в такой ситуации:
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node style/.style={
+            circle, 
+            draw=black, 
+            thick, 
+            minimum size=8mm, 
+            font=\bfseries\large
+        },
+        edge style/.style={
+            ->, 
+            thick, 
+            >=Stealth, 
+            shorten >=2pt, 
+            shorten <=2pt
+        }
+    ]
+        \node[node style] (s) at (0, 0) {$s$};
+        \node[node style] (v1) at (3, 0) {$v_1$};
+        \node[node style] (v2) at (6, 0) {$v_2$};
+        \node[node style] (t) at (9, 0) {$t$};
+        \node[node style] (v4) at (3, 3) {$v_4$};
+        \node[node style] (v3) at (6, 3) {$v_3$};
+
+        \draw[edge style] (s) -- node[above, font=\large] {$10/10$} (v1);
+        \draw[edge style] (v1) -- node[below, font=\large] {$10/10$} (v2);
+        \draw[edge style] (v2) -- node[below, font=\large] {$10/10$} (t);
+
+        \draw[edge style] (v4) -- node[left, font=\large] {$5/5$} (v1);
+
+        \draw[edge style] (v1) -- node[left, font=\large, pos=0.6] {$5/5$} (v3);
+
+        \draw[edge style] (v3) -- node[above, font=\large] {$5/5$} (v4);
+
+    \end{tikzpicture}
+
+\end{figure}
+
+Мы могли убрать путь $s \to v_1 \to v_2 \to t$ и тогда бы остался цикл $v_1 \to v_3 \to v_4 \to v_1$.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node style/.style={
+            circle, 
+            draw=black, 
+            thick, 
+            minimum size=8mm, 
+            font=\bfseries\large
+        },
+        edge style/.style={
+            ->, 
+            thick, 
+            >=Stealth, 
+            shorten >=2pt, 
+            shorten <=2pt
+        }
+    ]
+        \node[node style] (s) at (0, 0) {$s$};
+        \node[node style] (v1) at (3, 0) {$v_1$};
+        \node[node style] (v2) at (6, 0) {$v_2$};
+        \node[node style] (t) at (9, 0) {$t$};
+        \node[node style] (v4) at (3, 3) {$v_4$};
+        \node[node style] (v3) at (6, 3) {$v_3$};
+
+        \draw[edge style, dashed, gray] (s) -- node[above, font=\large] {$10/10$} (v1);
+        \draw[edge style, dashed, gray] (v1) -- node[below, font=\large] {$10/10$} (v2);
+        \draw[edge style, dashed, gray] (v2) -- node[below, font=\large] {$10/10$} (t);
+
+        \draw[edge style, blue] (v4) -- node[left, font=\large] {$5/5$} (v1);
+
+        \draw[edge style, blue] (v1) -- node[left, font=\large, pos=0.6] {$5/5$} (v3);
+
+        \draw[edge style, blue] (v3) -- node[above, font=\large] {$5/5$} (v4);
+
+    \end{tikzpicture}
+
+\end{figure}
+
+Найдем все такие циклы вычтем из $f$ аналогично пункту 2 выше и уже после всего этого получим, что $f \equiv 0$ (не величина, а прям функция потока). Тогда пусть мы получили пути $P_1, P_2, \dots P_n$ и с ними соответственно коэффициенты $\alpha_1, \alpha_2, \dots \alpha_n$ из пункта 1, а также циклы $C_1, C_2, \dots C_m$ и $\beta_1, \beta_2, \dots \beta_m$ из пункта 2 и предыдущего предложения.
+Ясно, что в силу того, что мы в алгоритме итеративно вычитали из $f$ для соответствующих рёбер соответствующие коэффициенты $\{\alpha_i\}$ и $\{\beta_j\}$, то мы получили требуемые наборы.
+
+\end{proof}
+
+\Cons Пусть $\Ne$ -- сеть и $f$ -- поток в этой сети. Тогда найдутся простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m$.
+\begin{equation*}
+    f(u, v) = \sum\limits_{k = 1}^n \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \chi_{C_k}(u, v)
+\end{equation*}
+Причем $n = |f|$. То есть иначе говоря существует декомпозиция по <<единичным путям и циклам>>.
+\begin{proof}
+
+    По теореме выше, найдутся простые пути из $s$ в $t$ $P_1, P_2, \dots, P_l$, а также циклы $C_1, C_2, \dots C_p$, а также $\exists \alpha_1, \dots \alpha_l \in \N$ и $\beta_1, \dots, \beta_p \in \N$, которые удовлетворяют условию теоремы.
+    Теперь возьмем все такие $P_k$ и $C_k$ и проклонируем $\alpha_k$ и $\beta_k$ раз соответственно, но только уже с единичными коэффициентами. Получили требуемое.
+
+    Покажем, что $n = |f|$. Заметим, что все простые пути начинают свой путь с рёбер вида $(s, v) \in E$. Далее:
+    \begin{multline*}
+        |f| \eqd \sum\limits_{(s, v) \in E} f(s, v) = \sum\limits_{(s, v) \in E} \left[ \sum\limits_{k = 1}^n \chi_{P_k}(s, v) + \sum\limits_{k = 1}^m \chi_{C_k}(s, v) \right] = \\
+        = \sum\limits_{(s, v) \in E} \sum\limits_{k = 1}^n \chi_{P_k}(s, v) + \sum\limits_{(s, v) \in E}\sum\limits_{k = 1}^m \chi_{C_k}(s, v)
+    \end{multline*}
+
+    Покажем, что второе слагаемое есть ноль. Пусть $s \in C_k$, то есть $s$ находится в некотором цикле $\Rightarrow$ существует ребра $(p, s), (s, r) \in C_k$ -- входящее в $s$ и выходящее из него в цикле. Значит:
+    \begin{equation*}
+        \underbrace{\chi_{C_k} (p, s)}_{-1} + \underbrace{\chi_{C_k} (s, r)}_{1} = -1 + 1 = 0
+    \end{equation*}
+    Поэтому все слагаемые во втором слагаемом сократятся и получим:
+    \begin{equation*}
+        |f| = \sum\limits_{(s, v) \in E} \sum\limits_{k = 1}^n \chi_{P_k}(s, v)
+    \end{equation*}
+    Далее, если простой путь $P_k$ проходит по ребру $(s, v)$, то он точно не пройдет далее через некоторое другое ребро $(s, u)$, т.к. он бы пересек $s$ и не был бы простым. В то же время любой путь $P_k$ обязан проходить через какое-нибудь ребро $(s, v)$.
+    Поэтому получается, что у нас пути $P_1, \dots P_n$ <<раскиданы>> по ребрам вида $(s, v)$, при этом один путь $P_k$ не может проходить через два таких ребра сразу $\Rightarrow$ двойная сумма выше есть просто количество рёбер, т.е. $n$:
+    \begin{equation*}
+        |f| = \sum\limits_{(s, v) \in E} \sum\limits_{k = 1}^n \chi_{P_k}(s, v) = n
+    \end{equation*}
+    \begin{equation*}
+        |f| = n
+    \end{equation*}
+\end{proof}
+
+\Exe Как нужно поменять условия теоремы о декомпозиции, чтобы она была верна, если образы функций потока и емкости вещественны? Верно ли тогда предыдущее следствие?
+
+\section{Первая теорема Карзанова}
+\begingroup
+
+Если емкости вершин целочисленны (а в рамках наших лекций это так), то на самом деле можно дать другую верхнюю оценку на количество итераций схемы Диницы.
+В некоторых случаях данная оценка она может оценивать лучше, чем полученная в общем случае $\O(|V|)$. Однако данная оценка не выражается в наших привычных терминах $|E|$ и $|V|$, поэтому надо ввести некоторую дополнительную терминологию.
+
+Всюду далее в этом разделе считаем, что зафиксирована некоторая транспортная сеть $\mathcal{N} = (G, s, t, c)$.
+
+\newcommand{\p}{\mathbf{p}}
+
+\renewcommand{\P}{\mathbf{P}}
+
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^+(v) \overset{def}{=} \min\limits_{(u, v) \in E} c(u, v)$.
+
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $c^-(v) \overset{def}{=} \min\limits_{(u, v) \in E} c(u, v)$.
+
+\Def Пусть $\Ne$ -- сеть и $v \in V$. Тогда $\p(v) \overset{def}{=} \min\{c^+(v), c^-(v)\}$ -- потенциал вершины $v$.
+
+О потенциале вершины можно думать как о некой верхней оценки потока, который может пройти через эту вершину.
+
+\Def Пусть $\Ne$ -- сеть. Тогда потенциалом сети $\Ne$ будем называть
+\begin{equation*}
+    \P(\Ne) \eqd \sum\limits_{v \in V - s, t} \p(v)
+\end{equation*}
+
+На первый взгляд определение потенциала сети выше достаточно абстрактное и ни к чему необязывающее.
+Ну действительно, с чего бы вдруг сумма каких-то оценок потоков в каждой вершины может что-то значить.
+Однако певрая теорема Карзанова утверждает, что число итераций схемы Диница есть $\O\left(\sqrt {\P(\Ne)}\right)$. Перед доказательством данной теоремы мы докажем несколько утврерждений.
+
+\Def $V_d \eqd \{ v: \delta(s, v) \}$
+
+Покажем очевидные утверждения.
+
+\St $\forall k \geq 2 \, \nexists (u, v) \in E: u \in V_d, v \in V_{d+k}$
+\begin{proof}
+    
+    Действительно, если бы такое ребро существовало, то $v$ было бы на расстоянии $d + 1 < d + k \Rightarrow v \in V_{d + 1}$, противоречие.
+
+\end{proof}
+
+\St Верно следующее:
+\begin{equation*}
+    \sum\limits_{d = 1}^{\delta(s, t) - 1} \P(V_d) \leq \P(\Ne) 
+\end{equation*}
+\begin{proof}
+    \begin{equation*}
+        \sum\limits_{d = 1}^{\delta(s, t) - 1} \P(V_d) = \sum\limits_{d = 1}^{\delta(s, t) - 1} \sum\limits_{v \in V_d} \p(v) = \left\{ \bigcup_{d = 1}^{\delta(s, t) - 1} V_d \subset V \right\} = \sum\limits_{v \in V - s, t} \p(v) \leq \P(\Ne)
+    \end{equation*}
+\end{proof}
+
+\Def Пусть $V' \subset V$. Тогда:
+\begin{equation*}
+    \P(V') \eqd \sum\limits_{v \in V' - s, t} \p(v)
+\end{equation*}
+
+\St Пусть $f_0$ -- максимальный поток в сети. Тогда $\forall d \in 1 \dots \delta(t) - 1 \hookrightarrow |f_0| \leq \P(V_d)$
+\begin{proof}
+    
+    По следствию теоремы о декомпозиции, найдутся <<единичные>> простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m:$
+    \begin{equation*}
+        f_0(u, v) = \sum\limits_{k = 1}^n \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \chi_{C_k}(u, v)
+    \end{equation*}
+    Далее, в силу того, что $V_d$ -- множество вершин на расстоянии $d \leq \delta(s, t)$, то всякий простой путь $P_k$ содержит хотя бы одну вершину из $V_d$. Значит, он уменьшает <<входную и выходную>> емкости хотя бы на 1. Значит все пути в сумме уменьшают <<входные и выходные>> емкости хотя бы на $n$.
+    Из этого моментально следует, что $\P(V_d) - n \geq 0 \iff \P(V_d) \geq n$, иначе бы не хватило емкости. С другой стороны, по тому же следствию из теоремы о декомпозиции, $|f_0| = n \Rightarrow \P(V_d) \geq n = |f_0|$. Получили требуемое.
+
+\end{proof}
+
+\Lm Пусть $f_0$ -- максимальный поток в сети $\Ne$. Тогда верно следующее соотношение:
+\begin{equation*}
+    \delta_{\Ne}(s, t) \leq \frac{\P(\Ne)}{|f_0|} + 1
+\end{equation*}
+\begin{proof}
+    
+    По лемме выше, $\forall d \in 1 \dots \delta(s, t) - 1 \hookrightarrow |f_0| \leq \P(V_d)$. Тогда:
+    \begin{equation*}
+        (\delta_\Ne(s, t) - 1) |f_0| \leq \sum\limits_{d = 1}^{\delta_\Ne(s, t) - 1} \P (V_d) \leq \P(\Ne)
+    \end{equation*}
+    \begin{equation*}
+        \delta_\Ne(s, t) - 1 \leq \frac{\P(\Ne)}{|f_0|}
+    \end{equation*}
+    \begin{equation*}
+        \delta_\Ne(s, t) \leq \frac{\P(\Ne)}{|f_0|} + 1
+    \end{equation*}
+
+\end{proof}
+
+\Lm Пусть $f$ -- поток в сети $\Ne$. Тогда $\P(\Ne) = \P\left(\Ne_f\right)$.
+\begin{proof}
+
+    Покажем, что $c^+$ и $c^-$ не изменились в остаточной сети. Покажем для $c^+$, т.к. для $c^-$ аналогично.
+
+    Воспользуемся следствием теоремы о декомпозиции потока для $f$.
+    Существуют <<единичные>> простые пути из $s$ в $t$ $P_1, P_2, \dots, P_n$, а также циклы $C_1, C_2, \dots C_m:$
+    \begin{equation*}
+        f(u, v) = \sum\limits_{k = 1}^n \chi_{P_k}(u, v) + \sum\limits_{k = 1}^m \chi_{C_k}(u, v)
+    \end{equation*}
+
+    Рассмотрим вершину $v \in V - s, t$ и рассмотрим все пути и циклы, полученные выше, которые проходят через неё.
+    Рассмотрим $P_k$ или $C_k$ проходящий через $v$. Они обязаны пускать поток (или в случае цикла циркуляцию) следующим образом:
+
+    \begin{figure}[H]
+        \center
+        \begin{tikzpicture}[
+            node/.style={circle, draw, thick, minimum size=8mm, font=\large},
+            edge label/.style={font=\small, inner sep=2pt}
+            ]
+                \node[node] (u) at (0,0) {$u$};
+                \node[node, blue] (v) at (3,0) {$v$};
+                \node[node] (w) at (6,0) {$w$};
+
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=4pt] u.east) -- ([yshift=4pt] v.west)
+                    node[midway, above, edge label] {$+1$};
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=-4pt] v.west) -- ([yshift=-4pt] u.east)
+                    node[midway, below, edge label] {$-1$};
+
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=4pt] v.east) -- ([yshift=4pt] w.west)
+                    node[midway, above, edge label] {$+1$};
+                \draw[-{Stealth[length=3mm]}, thick] 
+                    ([yshift=-4pt] w.west) -- ([yshift=-4pt] v.east)
+                    node[midway, below, edge label] {$-1$};
+            \end{tikzpicture}    
+    \end{figure}
+    То есть поток (циркуляция) еще обратные ребра создает. Получается, что после пропускания пути (цикла) через $v$ в неё \textit{входят} ребра, которые увеличивают входную емкость на $+1$ и $-1$. В сумме получаем $+1 - 1 = 0$, то есть <<единичный>> путь (цикл) проходящий через $v$ не меняет входную емкость. Значит, любая сумма их тоже не меняет $\Rightarrow$ и сам поток тоже ничего не меняет.
+
+\end{proof}
+
+\Th{Первая теорема Карзанова} Количество итераций схемы Диница равно $\O\left(\sqrt {\P(\Ne)}\right)$.
+\begin{proof}
+    
+    Запустим схему Диница на $\sqrt {\P(\Ne)}$. Если больше запускать ее не надо, то это тривиальный случай. Допустим, еще можно запустить итерации. 
+    
+    Пусть после $\sqrt {\P(\Ne)}$ итераций мы получили поток $f$. По лемме выше, $\P(\Ne) = \P(\Ne_f)$. Пусть $f'$ -- максимальный поток в $\Ne_f$.
+    
+    В силу того, что после каждой итерации схемы расстояние от истока до стока увеличивается хотя бы на 1, то $\delta_{\Ne_f}(s, t) \geq \sqrt {\P(\Ne)}$.
+
+    Далее, применим вышедоказанную лемму к сети $\Ne_f$ (вспомним, что в ней максимальный поток $f'$):
+    \begin{equation*}
+        \delta_{\Ne_f}(s, t) \leq \frac{\P\left(\Ne_f\right)}{|f'|} + 1
+    \end{equation*}
+    Далее, вспомним, что $\P(\Ne) = \P\left( \Ne_f \right)$:
+    \begin{equation*}
+        \delta_{\Ne_f}(s, t) \leq \frac{\P\left(\Ne\right)}{|f'|} + 1
+    \end{equation*}
+    С другой стороны мы оценили $\delta_{\Ne_f}(s, t)$ снизу, а значит:
+    \begin{equation*}
+        \sqrt {\P(\Ne)} \leq \delta_{\Ne_f}(s, t) \leq \frac{\P\left(\Ne\right)}{|f'|} + 1
+    \end{equation*}
+    \begin{equation*}
+        \sqrt {\P(\Ne)} \leq \frac{\P\left(\Ne\right)}{|f'|} + 1
+    \end{equation*}
+    Теперь выразим оценку на $|f'|$:
+    \begin{equation*}
+        \frac{\P\left(\Ne\right)}{|f'|} + 1 \geq \sqrt {\P(\Ne)}
+    \end{equation*}
+    \begin{equation*}
+        \frac{\P\left(\Ne\right)}{|f'|} \geq \sqrt {\P(\Ne)} - 1
+    \end{equation*}
+    \begin{equation*}
+        \frac{|f'|}{\P\left(\Ne\right)} \leq \frac{1}{\sqrt {\P(\Ne)} - 1}
+    \end{equation*}
+    \begin{equation*}
+        |f'| \leq \frac{\P\left(\Ne\right)}{\sqrt {\P(\Ne)} - 1} = \O\left(\sqrt {\P(\Ne)}\right)
+    \end{equation*}
+    \begin{equation*}
+        |f'| = \O\left(\sqrt {\P(\Ne)}\right)
+    \end{equation*}
+    Далее, в силу того, что поток в сети $\Ne_f$ с каждой итерацией увеличивается хотя бы на 1, то в худшем случае нужно будет сделать еще $|f'| = \O\left(\sqrt {\P(\Ne)}\right)$ итераций.
+    Значит суммарно мы сделаем $\sqrt {\P(\Ne)} + \O\left(\sqrt {\P(\Ne)}\right) = \O\left(\sqrt {\P(\Ne)}\right)$ итераций.
+
+\end{proof}
+
+\Cons Схема Диница с удаляющим обходом работает за $\O\left( |V||E| \sqrt{\P(\Ne)} \right)$.
+
+\section{Алгоритм Хопкрофта-Карпа}
+
+Наглядной демонстрацией применения первой теоремы Карзанова -- это алгоритм Хопкрофта-Карпа. Этот алгоритм решает задачу нахождения максимального паросочетания.
+По своей сути он просто тривиален, но без знания теоремы Карзанова мы получими закономерный вопрос о состоятельности и нужности этого алгоритма. Однако давайте же его рассмотрим.
+
+Пусть дан на вход двудольный граф $G\langle L \oplus R, E \rangle$. Далее, $V = L \cup R$. Построим на его основе сеть. Введем исток $s$ и соединим со всеми рёбрами.
+Для каждого такого ребра $(s, u)$ положим $c(s, u) \eqd 1$. Далее, ориентируем ребра паросочетания так, чтобы они исходили из $L$ и входили в $R$ и для каждого такого ребра $(l, r)$ положим $c(l, r) = 1$.
+Введём сток $t$ и соеденим вершины из $R$ с $t$ рёбрами емкостью $1$. Обозначим полученную сеть за $\Ne_0$. Сразу заметим, что она единичная. Очевидно, что множество рёбер, насыщенные максимальным потоком, представляют собой максильное паросочетание.
+Также особое внимание уделим тому, что в этой сети $|E| + 2 |V|$ рёбер (исходные рёбра графа и еще ребра на соединение со стоком и истоком) и $|V| + 2$ вершины
+
+\Exe В принципе корректность данного алгоритма более чем очевидна, однако попробуйте ее показать с помощью теоремы Бержа.
+
+Если искать максимальный поток в такой сети с помощью схемы Диница с удаляющим обходом, мы, на первый взгляд, получаем асимптотику $\O\left(|V|^2(|E| + |V|)\right)$. Это, казалось бы, асимптотически медленнее, чем алгоритм Куна, работающий за $\O(|V|(|V| + |E|))$.
+
+Однако, давайте посчитаем потенциал данной сети.
+
+\begin{equation*}
+    \P(\Ne_0) = \sum\limits_{v \in V - s, t} \p(v) = \sum\limits_{v \in V - s, t} \underbrace{\min \{ c^-(v), c^+(v) \}}_{1} = \Theta(|V|)
+\end{equation*}
+
+Далее, рассмотрим как работает удаляющий обход. Заметим, что после каждой итерации удаляющего обхода все ребра насыщенные блокирующим потоком забываются (в силу единичности сети). Значит, удаляющий обход работает ровно за $\O(|V| + |E|)$.
+
+Получаем:
+\begin{equation*}
+    \O\left( (|V| + |E|) \sqrt{\P(\Ne_0)} \right) = \O\left( (|V| + |E|) \sqrt{|V|} \right)
+\end{equation*}
+Если паросочетание <<адекватное>> (то есть $|V| = \O(|E|)$), то получаем еще более красивую асимптотику $\O\left(|E| \sqrt{|V|}\right)$.
+
+\endgroup
