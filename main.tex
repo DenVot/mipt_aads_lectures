@@ -22,8 +22,8 @@
 
 \titleformat{\chapter}[display]
 {\normalfont\bfseries\Huge}
-{Лекция\ \thechapter}{20pt}{\Huge}
-\renewcommand{\chaptername}{Лекция}
+{\thechapter}{20pt}{\Huge}
+\renewcommand{\chaptername}{}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -36,89 +36,267 @@
     \fancyhead[R]{\thepage}%
     \renewcommand{\headrulewidth}{0.4pt}%
 }
-\renewcommand{\chaptermark}[1]{\markboth{Лекция \thechapter.\ #1}{}}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
 \setlength{\headheight}{15pt}
 \setlength{\headsep}{9pt}
 \raggedbottom
 \setcounter{secnumdepth}{3}
+\newcounter{megatopicidx}
+\newcounter{topicidx}
 
-\newcommand{\Semester}[1]{%
+\makeatletter
+\providecommand*{\toclevel@megatopic}{-2}
+\makeatother
+
+% Нумерация глав начинается заново в каждой теме, поэтому стандартные
+% hyperref-якоря chapter.1, section.1.1 и т. п. повторялись. Номер темы
+% делает внутренние имена уникальными, не меняя видимую нумерацию.
+\renewcommand*{\theHchapter}{\arabic{topicidx}.\arabic{chapter}}
+\renewcommand*{\theHsection}{\theHchapter.\arabic{section}}
+\renewcommand*{\theHsubsection}{\theHsection.\arabic{subsection}}
+\renewcommand*{\theHsubsubsection}{\theHsubsection.\arabic{subsubsection}}
+
+\newcommand{\MegaTopicOrnament}{%
+    \begin{tikzpicture}[x=1cm,y=1cm]
+        \draw[blue!45!black,line width=0.65pt]
+            (-3.3,0) -- (-2.35,0.65) -- (-1.15,0.05) --
+            (0,0.75) -- (1.15,0.05) -- (2.35,0.65) -- (3.3,0);
+        \draw[blue!30,line width=0.45pt]
+            (-2.35,0.65) -- (-1.7,-0.55) -- (-1.15,0.05)
+            (0,0.75) -- (0,-0.55)
+            (1.15,0.05) -- (1.7,-0.55) -- (2.35,0.65);
+        \foreach \x/\y in {
+            -3.3/0,-2.35/0.65,-1.7/-0.55,-1.15/0.05,
+            0/0.75,0/-0.55,1.15/0.05,1.7/-0.55,2.35/0.65,3.3/0
+        } {
+            \filldraw[fill=white,draw=blue!55!black,line width=0.55pt]
+                (\x,\y) circle (0.075);
+        }
+    \end{tikzpicture}%
+}
+
+\newcommand{\MegaTopic}[1]{%
+    \refstepcounter{megatopicidx}%
     \clearpage%
-    \setcounter{part}{#1}%
-    \markboth{}{}%
-    \thispagestyle{empty}%
-    \vspace*{\fill}%
-    \begin{center}
-        {\Huge\bfseries \Roman{part} семестр}
-    \end{center}%
     \phantomsection%
-    \addcontentsline{toc}{part}{\Roman{part}~семестр}%
+    \addcontentsline{toc}{megatopic}{\MakeUppercase{#1}}%
+    \markboth{#1}{}%
+    \thispagestyle{empty}%
+    \begin{tikzpicture}[remember picture,overlay]
+        \fill[blue!3]
+            (current page.south west) rectangle (current page.north east);
+        \draw[blue!18,line width=0.8pt,rounded corners=8pt]
+            ([xshift=8mm,yshift=8mm]current page.south west)
+            rectangle
+            ([xshift=-8mm,yshift=-8mm]current page.north east);
+    \end{tikzpicture}%
+    \null\vspace*{\fill}%
+    \begin{center}
+        {\Huge\bfseries\MakeUppercase{#1}\par}%
+        \vspace{13mm}
+        \MegaTopicOrnament
+    \end{center}%
+    \vspace*{\fill}%
+    \clearpage%
+}
+
+\newcommand{\TopicOrnament}{%
+    \begin{scope}
+        \draw[black!38, line width=0.33pt, line cap=round]
+            (-1.55,0) -- (1.55,0);
+        \draw[black!54, line width=0.58pt, line cap=round, line join=round]
+            (-1.55,0)
+            .. controls (-1.95,0.08) and (-2.15,0.42) .. (-1.75,0.52)
+            .. controls (-1.35,0.6) and (-1.2,0.28) .. (-1.48,0.1)
+            .. controls (-1.55,0.04) .. (-1.55,0);
+        \draw[black!34, line width=0.3pt, line cap=round]
+            (-1.72,0.48)
+            .. controls (-1.5,0.38) and (-1.42,0.18) .. (-1.52,0.05);
+        \draw[black!54, line width=0.58pt, line cap=round, line join=round]
+            (1.55,0)
+            .. controls (1.95,0.08) and (2.15,0.42) .. (1.75,0.52)
+            .. controls (1.35,0.6) and (1.2,0.28) .. (1.48,0.1)
+            .. controls (1.55,0.04) .. (1.55,0);
+        \draw[black!34, line width=0.3pt, line cap=round]
+            (1.72,0.48)
+            .. controls (1.5,0.38) and (1.42,0.18) .. (1.52,0.05);
+        \draw[black!50, line width=0.42pt, line join=round]
+            (0,0.12) -- (0.085,0) -- (0,-0.12) -- (-0.085,0) -- cycle;
+        \fill[black!32] (-0.22,0) circle (0.018);
+        \fill[black!32] (0.22,0) circle (0.018);
+    \end{scope}%
+}
+
+\newcommand{\Topic}[1]{%
+    \refstepcounter{topicidx}%
+    \clearpage%
+    \phantomsection%
+    \addcontentsline{toc}{part}{#1}%
+    \markboth{#1}{}%
+    \thispagestyle{empty}%
+    \null\vspace*{\fill}%
+    \begin{center}
+        \begin{minipage}{0.88\textwidth}
+            \centering
+            {\Huge\bfseries #1\par}%
+            \vspace{10mm}
+            \begin{tikzpicture}[baseline=-0.6ex]
+                \TopicOrnament
+            \end{tikzpicture}
+        \end{minipage}
+    \end{center}%
     \vspace*{\fill}%
     \clearpage%
     \setcounter{chapter}{0}%
+    \setcounter{section}{0}%
 }
 
-\newcommand{\Lecture}[3]{%
-    \setcounter{chapter}{\numexpr#1-1\relax}%
-    \chapter{#2}%
-    \input{#3}%
+\newcommand{\Unit}[2]{%
+    \chapter{#1}%
+    \input{#2}%
 }
 
 \setcounter{tocdepth}{1}
+\renewcommand{\contentsname}{Оглавление}
+
 \makeatletter
+\renewcommand\@pnumwidth{1.6em}
+\renewcommand\@tocrmarg{2.4em}
+
+% Точка только у «голых» номеров глав (1 → 1.), не у секций (2.1).
+\renewcommand{\numberline}[1]{%
+    \in@{.}{#1}%
+    \hb@xt@\@tempdima{#1\ifin@\else.\fi\hfil}}
+
+\newcommand{\@tocdotfill}{%
+    \leaders\hbox to 0.5em{\hss\textcolor{black!28}{.}\hss}\hfill}
+
+\newcommand{\@tocflourishleft}{%
+    \begin{tikzpicture}[x=0.85em,y=0.85em,baseline=0em]
+        \path[use as bounding box] (0,-0.22) rectangle (2.05,0.88);
+        \draw[black!70,line width=0.58pt,line cap=round,line join=round]
+            (0,0.03) -- (0.40,0.03)
+            .. controls (0.92,0.03) and (0.75,0.78) .. (1.32,0.78)
+            .. controls (1.90,0.78) and (1.95,0.12) .. (1.28,0.12)
+            .. controls (1.05,0.12) and (1.13,0.42) .. (1.48,0.38)
+            .. controls (1.73,0.34) and (1.72,0.03) .. (2.05,0.03);
+        \draw[black!48,line width=0.36pt,line cap=round]
+            (0.58,0.06)
+            .. controls (0.82,0.34) and (1.10,0.39) .. (1.40,0.28);
+        \draw[black!42,line width=0.32pt,fill=white]
+            (0.94,0.34)
+            .. controls (0.78,0.54) and (0.70,0.43) .. (0.94,0.34)
+            .. controls (1.12,0.27) and (1.08,0.45) .. (0.94,0.34);
+        \fill[black!55] (1.68,0.08) circle (0.025);
+    \end{tikzpicture}%
+}
+
+\newcommand{\@tocflourishright}{%
+    \begin{tikzpicture}[x=0.85em,y=0.85em,baseline=0em]
+        \path[use as bounding box] (0,-0.22) rectangle (2.05,0.88);
+        \begin{scope}[xshift=1.7425em,xscale=-1]
+            \draw[black!70,line width=0.58pt,line cap=round,line join=round]
+                (0,0.03) -- (0.40,0.03)
+                .. controls (0.92,0.03) and (0.75,0.78) .. (1.32,0.78)
+                .. controls (1.90,0.78) and (1.95,0.12) .. (1.28,0.12)
+                .. controls (1.05,0.12) and (1.13,0.42) .. (1.48,0.38)
+                .. controls (1.73,0.34) and (1.72,0.03) .. (2.05,0.03);
+            \draw[black!48,line width=0.36pt,line cap=round]
+                (0.58,0.06)
+                .. controls (0.82,0.34) and (1.10,0.39) .. (1.40,0.28);
+            \draw[black!42,line width=0.32pt,fill=white]
+                (0.94,0.34)
+                .. controls (0.78,0.54) and (0.70,0.43) .. (0.94,0.34)
+                .. controls (1.12,0.27) and (1.08,0.45) .. (0.94,0.34);
+            \fill[black!55] (1.68,0.08) circle (0.025);
+        \end{scope}
+    \end{tikzpicture}%
+}
+
+\newcommand{\@tocrulefill}{%
+    \leaders\hrule height 0.45pt\hfill}
+
+% Строка оглавления без \leftskip — иначе отступ «накапливается» при переносе страницы.
+\newcommand{\@tocline}[4]{%
+    \par\noindent
+    \hb@xt@\linewidth{%
+        \hspace*{#1}%
+        \begingroup
+            \@tempdima=#2\relax
+            #3%
+        \endgroup
+        \nobreak\@tocdotfill
+        \nobreak\hb@xt@\@pnumwidth{\hss #4}%
+    }%
+    \par
+}
+
+\newcommand*\l@megatopic[2]{%
+    \ifnum \c@tocdepth >-3\relax
+        \addpenalty{-\@highpenalty}%
+        \addvspace{1.05em \@plus 2pt}%
+        \par\noindent
+        \hb@xt@\linewidth{%
+            \@tocrulefill
+            \@tocflourishleft\hspace{0.55em}%
+            {\LARGE\bfseries\textcolor{blue!55!black}{#1}}%
+            \hspace{0.55em}\@tocflourishright
+            \@tocrulefill
+        }%
+        \par
+        \nobreak
+        \addvspace{0.35em}%
+    \fi
+}
 
 \renewcommand*\l@part[2]{%
     \ifnum \c@tocdepth >-2\relax
         \addpenalty{-\@highpenalty}%
-        \addvspace{1.05em \@plus 3\p@}%
-        \setlength\@tempdima{3em}%
-        \begingroup
-            \parindent \z@
-            \leavevmode
-            {\large\bfseries\color{blue!55!black}#1}\par
-            \nobreak
-            \global\@nobreaktrue
-            \everypar{\global\@nobreakfalse\everypar{}}%
-        \endgroup
-    \fi}
-\makeatother
-\titlecontents{chapter}[0pc]
-    {\addvspace{0.55em}\bfseries}%
-    {\color{violet!75!black}Лекция~\thecontentslabel.\quad}%
-    {}%
-    {\titlerule*[0.42em]{\textcolor{black!28}{.}}\quad\contentspage}%
-    [\kern0.18em]
-\titlecontents{section}[1.15pc]
-    {\addvspace{0.1em}\normalfont\small}%
-    {\thecontentslabel\quad}%
-    {}%
-    {\titlerule*[0.42em]{\textcolor{black!28}{.}}\quad\contentspage}%
-    []
+        \addvspace{0.85em \@plus 1pt}%
+        \par\noindent
+        \hb@xt@\linewidth{%
+            \@tocrulefill
+            \hspace{0.75em}%
+            {\large\bfseries\textcolor{blue!55!black}{#1}}%
+            \hspace{0.75em}%
+            \@tocrulefill
+        }%
+        \par
+        \addvspace{0.2em}%
+    \fi
+}
 
-\makeatletter
-\renewcommand\@pnumwidth{1.7em}
-\makeatother
+\renewcommand*\l@chapter[2]{%
+    \ifnum \c@tocdepth >\m@ne
+        \addpenalty{-\@highpenalty}%
+        \addvspace{0.28em \@plus 1pt}%
+        \@tocline{0pt}{1.4em}{\bfseries\textcolor{violet!75!black}{#1}}{\bfseries\textcolor{violet!75!black}{#2}}%
+    \fi
+}
 
-\renewcommand{\contentsname}{Оглавление}
+\renewcommand*\l@section[2]{%
+    \ifnum \c@tocdepth >\z@
+        \addvspace{0.05em \@plus 0.05pt}%
+        \@tocline{0.9em}{2.2em}{#1}{#2}%
+    \fi
+}
 
-\makeatletter
-% Вместо \chapter*{\contentsname} (огромный \Huge) — компактный заголовок
 \renewcommand\tableofcontents{%
     \if@twocolumn
         \@restonecoltrue\onecolumn
     \else
         \@restonecolfalse
     \fi
+    \phantomsection
+    \@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}%
     \begingroup
-        \parindent \z@
-        \null\vskip 0.35\baselineskip
-        \@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}%
-        \phantomsection
-        \centering
-        {\large\bfseries\contentsname\par}%
-        \vskip 0.65\baselineskip
+        \small
+        \parindent\z@
+        \parskip\z@
+        \leftskip\z@
+        \rightskip\z@
+        \@starttoc{toc}%
     \endgroup
-    \@starttoc{toc}%
     \if@restonecol\twocolumn\fi
 }%
 \makeatother
@@ -169,15 +347,13 @@
     \restoregeometry
 \end{titlepage}
 
-\clearpage
 \frontmatter
 \pagestyle{fancy}
 \tableofcontents
-\clearpage
 \mainmatter
 \hypersetup{pageanchor=true}%
 \pagestyle{fancy}
 % \input{intro}
-\input{lectures_manifest}
+\input{topics_manifest}
 
 \end{document}
