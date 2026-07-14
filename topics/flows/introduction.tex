@@ -82,7 +82,7 @@
     \end{multline*}
 \end{proof}
 
-\Cons $\forall Y \subset X \subset V, \forall Z \subset V \hookrightarrow f(X - Y, Z) = f(X, Z) - f(Y, Z), f(Z, X - Y) = f(Z, X) - f(Z, Y)$
+\Cons[cons-flow-diff] $\forall Y \subset X \subset V, \forall Z \subset V \hookrightarrow f(X - Y, Z) = f(X, Z) - f(Y, Z), f(Z, X - Y) = f(Z, X) - f(Z, Y)$
 \begin{proof}
 
     $X - Y \cap Y = \varnothing$, поэтому применим предыдущее утверждение к этой паре:
@@ -138,7 +138,7 @@
 \end{enumerate}
 
 
-\Lm Пусть $f'$ -- поток в остаточной сети $(G_f, s, t, c_f)$. Тогда $f + f'$ -- поток. 
+\Lm[lm-flow-sum] Пусть $f'$ -- поток в остаточной сети $(G_f, s, t, c_f)$. Тогда $f + f'$ -- поток. 
 Более того, верно, что $|f + f'| = |f| + |f'|$.
 \begin{proof}
 
@@ -174,14 +174,14 @@
 \Lm Пусть $(S, T)$ -- разрез, тогда $f(S, T) = |f|$.
 \begin{proof}
     
-    Посмотрим на определение разреза и заметим, что выполнены все условия утверждения 8.3.3. Применим его, заметив, что $T = V - S$:
+    Посмотрим на определение разреза и заметим, что выполнены все условия \ConsRef[утверждения]{cons-flow-diff}. Применим его, заметив, что $T = V - S$:
     \begin{multline*}
         f(S, T) = f(S, V - S) = f(S, V) - \underbrace{f(S, S)}_{0} = f(S, V) = f(\{s\} \cup (S \setminus \{s\}), V) = \\
         = \underbrace{f(s, V)}_{|f|} + f(S - s, V) = |f| + f(S - s, V) = |f| + \sum\limits_{u \in S - s} \underbrace{\sum\limits_{v \in V} f(u, v)}_{0} = |f|
     \end{multline*} 
 \end{proof}
 
-\Cons $\forall (S, T)$ -- разреза верно, что $|f| \leq c(S, T)$.
+\Cons[cons-flow-cut] $\forall (S, T)$ -- разреза верно, что $|f| \leq c(S, T)$.
 \begin{proof}
     \begin{equation*}
         |f| = f(S, T) = \sum\limits_{u \in S} \sum\limits_{v \in T} f(u, v) \leq \sum\limits_{u \in S} \sum\limits_{v \in T} c(u, v) = c(S, T)
@@ -220,7 +220,7 @@
 \end{enumerate}
 \begin{proof}
 
-    $(1 \Rightarrow 2).$ Предположим, что существует увеличивающий путь $P$. Тогда рассмотрим $f' = f + f_P$. По лемме 8.4.1, $f'$ -- поток. Более того:
+    $(1 \Rightarrow 2).$ Предположим, что существует увеличивающий путь $P$. Тогда рассмотрим $f' = f + f_P$. По \LmRef[лемме]{lm-flow-sum}, $f'$ -- поток. Более того:
     \begin{equation*}
         |f'| = |f| + |f_P| = |f| + \underbrace{c_f(P)}_{>0} > |f|
     \end{equation*}
@@ -242,7 +242,7 @@
     \end{equation*}
     Получили требуемое.
 
-    $(3 \Rightarrow 1).$ По следствию 8.5.2, $|f| \leq c(S, T)$ для всякого разреза. Если нашелся такой разрез $(S, T)$, что $|f| = c(S, T)$, значит, поток максимален. 
+    $(3 \Rightarrow 1).$ По \ConsRef[следствию]{cons-flow-cut}, $|f| \leq c(S, T)$ для всякого разреза. Если нашелся такой разрез $(S, T)$, что $|f| = c(S, T)$, значит, поток максимален. 
 
 \end{proof}
 

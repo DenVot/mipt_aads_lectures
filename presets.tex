@@ -62,7 +62,10 @@
     \IfValueT{#1}{\label{#1}}
     \space
 }
-\newcommand{\DefRef}[1]{\hyperref[#1]{определение~\ref*{#1}}}
+% Ссылки: \DefRef{label} → «определение N»; \DefRef[определении]{label} → «определении N»
+\NewDocumentCommand{\DefRef}{o m}{%
+    \hyperref[#2]{\IfValueTF{#1}{#1}{определение}~\ref*{#2}}%
+}
 \newcounter{statement}[section]
 \renewcommand{\thestatement}{\thesection.\arabic{statement}}
 \NewDocumentCommand{\Th}{o g}{
@@ -114,10 +117,22 @@
     \IfValueT{#1}{\label{#1}}
     \space
 }
-\newcommand{\ThRef}[1]{\hyperref[#1]{теорема~\ref*{#1}}}
-\newcommand{\LmRef}[1]{\hyperref[#1]{лемма~\ref*{#1}}}
-\newcommand{\StRef}[1]{\hyperref[#1]{утверждение~\ref*{#1}}}
-\newcommand{\ConsRef}[1]{\hyperref[#1]{следствие~\ref*{#1}}}
+% Ссылки на утверждения. Опциональный аргумент — нужная словоформа:
+%   \LmRef{lm-foo}           → лемма N
+%   \LmRef[лемме]{lm-foo}    → лемме N
+%   \StRef[утверждению]{...} → утверждению N
+\NewDocumentCommand{\ThRef}{o m}{%
+    \hyperref[#2]{\IfValueTF{#1}{#1}{теорема}~\ref*{#2}}%
+}
+\NewDocumentCommand{\LmRef}{o m}{%
+    \hyperref[#2]{\IfValueTF{#1}{#1}{лемма}~\ref*{#2}}%
+}
+\NewDocumentCommand{\StRef}{o m}{%
+    \hyperref[#2]{\IfValueTF{#1}{#1}{утверждение}~\ref*{#2}}%
+}
+\NewDocumentCommand{\ConsRef}{o m}{%
+    \hyperref[#2]{\IfValueTF{#1}{#1}{следствие}~\ref*{#2}}%
+}
 \def\Task{\textbf{Задача.} }
 \def\Exe{\textbf{Упражнение.} }
 \def\Note{\textbf{Примечание.} }
