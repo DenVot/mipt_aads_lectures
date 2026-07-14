@@ -1,13 +1,13 @@
 \section{Введение}
 
-На прошлой лекции было показано, что задача о максимальном потоке решается за хоть сколько-то приемлимое время с помощью алгоритма Эдмондса-Карпа. 
+Ранее было показано, что задача о максимальном потоке решается за хоть сколько-то приемлимое время с помощью алгоритма Эдмондса-Карпа. 
 Но глобально этот алгоритм особо ничем не отличается от алгоритма Форда-Фалкерсона, главная сложность там это показать, что мы имеем действительно асимптотику $\O\left(|V||E|^2\right)$.
 Однако существует алгоритм, который нам позволит <<скинуть>> квадрат на множество вершин в худшем случае. Правда корректней тут говорить не сам алгоритм, а скорее схема, которая нам позволяет это сделать при должной имплементации. 
 Эту схему называют \textit{схемой Диница}. Ключевой особенностью схемы является то, что мы ищем так называемые \textit{блокирующие потоки} в \textit{слоистой сети}, которую мы введем позднее. Центральным вопросом в этой схеме будет ответ на вопрос <<А как искать блокирующий поток?>>. 
 На лекции будет приведен жадный способ их поиска, а также в качестве дополнительного материала будет рассмотрен способ удаляющего обхода, который как раз нам и позволит получить желаемую асимптотику $\O\left(|V|^2|E|\right)$.
 Далее мы установим связь между <<пропускной способностью сети>> и количеством итераций схемы Диница.
 
-Всюду на лекции мы считаем, что задана некоторая сеть $\mathcal{N} = (G, s, t, c)$.
+Всюду далее мы считаем, что задана некоторая сеть $\mathcal{N} = (G, s, t, c)$.
 
 \section{Блокирующие потоки}
 
@@ -54,59 +54,26 @@
 \begin{equation*}
     V_L \overset{def}{=} \bigcup\limits_{d = 0}^{\delta(t)} V_d
 \end{equation*}
-$E_L$ получается же только лишь рёбрами, которые идут из $V_{d}$ в $V_{d + 1}$ для всякого $d$.
-
-
-\begin{figure*}[h]
-    \centering
-    \begin{tikzpicture}[>=Stealth, node distance=2cm, auto]
-        
-        \node[circle, draw, fill=white!20, minimum size=5mm] (A) at (0,0) {};
-        \node[circle, draw, fill=white!20, minimum size=5mm] (B) at (2,1.5) {};
-        \node[circle, draw, fill=white!20, minimum size=5mm] (C) at (2,-1.5) {};
-        \node[circle, draw, fill=white!20, minimum size=5mm] (D) at (4,0) {};
-
-        
-        \draw[->] (A) -- (B) node[midway, above left] {1};
-        \draw[->] (C) -- (D) node[midway, below right] {1};
-
-        
-        \draw[->, red] (A) -- (C) node[midway, below left] {1};
-        \draw[->, red] (C) -- (B) node[midway, right] {1};
-        \draw[->, red] (B) -- (D) node[midway, above right] {1};
-    \end{tikzpicture}    
-\end{figure*}
-
-На рисунке показан блокирующий поток с величиной 1, однако, очевидно, если пусть поток по <<параллельным рёбрам>>, то он станет размера 4.
-
-Будем обозначать $\texttt{FIND\_BLOCK\_FLOW(}\mathcal{N}\texttt{)}$ функцию, которая по сети $\mathcal{N}$ находит в ней блокирующий поток.
-
-\section{Слоистая сеть}
-
-\Def Слоистой сетью $(G_L\langle V_L, E_L \rangle, s, t, c)$ по сети $\mathcal{N}$ будем называть сеть построенную следующим образом:
-\begin{equation*}
-    V_d \overset{def}{=} \{ v: \delta(s, v) = d \}, d \in 0 \dots \delta(t)
-\end{equation*}
-\begin{equation*}
-    V_L \overset{def}{=} \bigcup\limits_{d = 0}^{\delta(t)} V_d
-\end{equation*}
 $E_L$ получается же только лишь рёбрами, которые идут из $V_{d}$ в $V_{d + 1}$ для всякого $d$. Слоистую сеть порожденную сетью $\mathcal{N}$ будем обозначать $\mathcal{N}_L$ или $\mathcal{N}^L$.
 
 Приведем пример слоистой сети. Ниже дан исходный граф, а далее его слоистая версия.
 
 \begin{figure*}[h]
     \centering
+    \makebox[\textwidth][c]{%
     \begin{tikzpicture}[
         node distance=1.5cm and 2cm,
-        vertex/.style={circle, draw, thick, minimum size=9mm, inner sep=1pt, 
-                    font=\bfseries\sffamily, fill=white},
-        edge/.style={-{Stealth[length=3mm]}, thick, draw=black!70},
+        vertex/.style={circle, draw, thick, minimum size=12mm, inner sep=1pt, 
+                    font=\large\bfseries\sffamily\boldmath, fill=white},
+        edge/.style={-{Stealth[length=2.2mm, width=1.5mm]}, semithick, draw=black!70},
         layerbox/.style={draw=red!60!black, densely dashed, thick, rounded corners=5pt, 
                         fill=red!5, inner sep=8mm},
         layerlabel/.style={font=\small\bfseries, text=red!70!black},
         maintitle/.style={font=\Large\bfseries\sffamily, text=black!80},
         >=stealth,
-        scale=0.75
+        scale=0.52,
+        transform shape,
+        baseline=(current bounding box.center)
     ]
 
     \node[vertex] (s) at (0,0) {$s$};
@@ -130,21 +97,20 @@ $E_L$ получается же только лишь рёбрами, котор
     \draw[edge] (e) to (t);
 
     \end{tikzpicture}
-\end{figure*}
-
-\begin{figure*}[h]
-    \centering
+    \hspace{0.6cm}%
     \begin{tikzpicture}[
         node distance=1.5cm and 2cm,
-        vertex/.style={circle, draw, thick, minimum size=9mm, inner sep=1pt, 
-                    font=\bfseries\sffamily, fill=white},
-        edge/.style={-{Stealth[length=3mm]}, thick, draw=black!70},
-        layerbox/.style={draw=red!60!black, densely dashed, thick, rounded corners=5pt, 
-                        fill=red!5, inner sep=3mm},
+        vertex/.style={circle, draw, thick, minimum size=12mm, inner sep=1pt, 
+                    font=\large\bfseries\sffamily\boldmath, fill=white},
+        edge/.style={-{Stealth[length=2.2mm, width=1.5mm]}, semithick, draw=black!70},
+        layerbox/.style={draw=red!60!black, densely dashed, semithick, rounded corners=3pt, 
+                        fill=red!5, inner xsep=1.5mm, inner ysep=1mm},
         layerlabel/.style={font=\small\bfseries, text=red!70!black},
         maintitle/.style={font=\Large\bfseries\sffamily, text=black!80},
         >=stealth,
-        scale=0.75
+        scale=0.52,
+        transform shape,
+        baseline=(current bounding box.center)
     ]
         \node[vertex] (sL) at (0,0) {$s$};
 
@@ -176,6 +142,7 @@ $E_L$ получается же только лишь рёбрами, котор
             \node[layerbox, fit=(tL)] (L3) {};
         \end{scope}
     \end{tikzpicture}
+    }
 \end{figure*}
 Обратите внимание на пунктирные рёбра -- это те ребра, которые были в исходном графе, но не вошли в слоистую сеть.
 
@@ -218,13 +185,6 @@ $E_L$ получается же только лишь рёбрами, котор
 \begin{proof}
 
     Алгоритм завершается, когда в остаточной пути нет блокирующего потока. Если нет блокирующего потока, значит в остаточной сети нет пути из $s$ в $t$, следовательно, по теореме Форда-Фалкерсона, $f$ -- максимальный.
-
-\end{proof}
-
-\Lm После каждой итерации схемы Диница расстояние от истока к стоку в остаточной сети строго возрастает.
-\begin{proof}
-
-    \textit{...Здесь типа будет доказательство с лекции...}
 
 \end{proof}
 
@@ -557,7 +517,7 @@ $E_L$ получается же только лишь рёбрами, котор
 \section{Первая теорема Карзанова}
 \begingroup
 
-Если емкости вершин целочисленны (а в рамках наших лекций это так), то на самом деле можно дать другую верхнюю оценку на количество итераций схемы Диницы.
+Если емкости вершин целочисленны (а в рамках нашей аксиоматики это так, хотя в общей постановке это важно), то на самом деле можно дать другую верхнюю оценку на количество итераций схемы Диницы.
 В некоторых случаях данная оценка она может оценивать лучше, чем полученная в общем случае $\O(|V|)$. Однако данная оценка не выражается в наших привычных терминах $|E|$ и $|V|$, поэтому надо ввести некоторую дополнительную терминологию.
 
 Всюду далее в этом разделе считаем, что зафиксирована некоторая транспортная сеть $\mathcal{N} = (G, s, t, c)$.
