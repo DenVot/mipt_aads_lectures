@@ -151,6 +151,18 @@
 \def\Z{\mathbb{Z}}
 \def\C{\mathbb{C}}
 \def\Primary{\mathbb{P}}
+\def\Pr{\mathbb{P}}
+\def\E{\mathbb{E}}
+\def\D{\mathbb{D}}
 \def\eqd{\overset{def}{=}}
+\def\Img{\operatorname{Im}}
+
+% Звёздочка-метка равенства: ... = \EqStar{eq:foo}
+% Потом ссылка: \EqStarRef{eq:foo} = ...
+% (hypertarget, а не \label: amsmath глушит \label внутри multline*/align*)
+\newcommand{\EqStar}[1]{%
+    \text{\hypertarget{#1}{\hyperlink{#1}{$(*)$}}}%
+}
+\newcommand{\EqStarRef}[1]{\text{\hyperlink{#1}{$(*)$}}}
 
 \newenvironment{sol}{\begin{proof}[Решение]}{\end{proof}}
